@@ -386,6 +386,18 @@ code { color: #FFE08A; }
   color: #1A0E46; background: linear-gradient(180deg, #fff, #CFC2FF); border: 2px solid #1A0E46;
   border-radius: 999px; padding: 3px 12px 2px; text-shadow: none; transform: skewX(-9deg); white-space: nowrap;
 }
+/* match details + fix */
+.matched { font-size: 10.5px; font-style: italic; color: #FFD27A; }
+.fix { display: grid; gap: 6px; min-width: 0; }
+.slot { grid-template-columns: minmax(0, 1fr); }
+.fixbtn { justify-self: start; background: none; border: 0; padding: 0; cursor: pointer; font-size: 10.5px; color: #9AA6B4; text-decoration: underline dotted; text-underline-offset: 2px; box-shadow: none; }
+.fixbtn:hover { color: #ECE8F7; background: none; }
+.fix [hidden] { display: none !important; }
+.fixform { display: flex; gap: 6px; }
+.fixform input { flex: 1 1 0; width: 0; min-width: 0; padding: 5px 8px; border-radius: 8px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.35); color: #F2F6FA; font-size: 11px; }
+.fixform .btn { padding: 4px 10px; font-size: 11px; }
+.fixmsg { font-size: 10.5px; color: #FFD27A; }
+.fixmsg:empty { display: none; }
 /* Floating PICK button, always in reach */
 .pick-wrap {
   position: fixed; z-index: 50;
@@ -478,6 +490,10 @@ code { color: #FFE08A; }
           <span class="label" id="len-label">Length</span>
           <div class="chips" role="group" aria-labelledby="len-label" id="lengths"></div>
         </div>
+      </div>
+      <div>
+        <span class="label" id="decade-label">Decade <em>(pick any)</em></span>
+        <div class="chips" role="group" aria-labelledby="decade-label" id="decades"></div>
       </div>
       <div>
         <span class="label" id="genre-label">Genre <em>(pick any; a film matches if it has one of them)</em></span>
@@ -1453,6 +1469,7 @@ Date,Name,Year,Letterboxd URI
     count: store.get('count', 3),
     length: store.get('length', 'any'),
     genres: new Set(store.get('genres', [])),
+    decades: new Set(store.get('decades', [])),
     picks: [],
     busy: false,
   };
@@ -1520,7 +1537,7 @@ Date,Name,Year,Letterboxd URI
     }
     throw new Error('rate');
   }
-  const META_V = 2;
+  const META_V = 3;
   const REGION = (() => {
     const tag = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
     const m = tag.match(/-([A-Za-z]{2})\b/);
@@ -1538,30 +1555,72 @@ Date,Name,Year,Letterboxd URI
     }
     return { stream, rentbuy: !!((r.rent && r.rent.length) || (r.buy && r.buy.length)), link: r.link || null };
   }
-  async function lookup(film) {
-    const tries = film.year
-      ? [{ primary_release_year: film.year }, { year: film.year }, {}]
-      : [{}];
-    let hit = null;
-    for (const extra of tries) {
-      const res = await tmdb('/search/movie', { query: film.name, include_adult: 'false', ...extra });
-      if (res.results && res.results.length) { hit = res.results[0]; break; }
+  function norm(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/&/g, ' and ').replace(/['’`.]/g, '').replace(/[^a-z0-9]+/g, ' ')
+      .trim().replace(/^(the|a|an) /, '');
+  }
+  function titleScore(q, names) {
+    const t = norm(q); let best = 0;
+    for (const n of names) {
+      const a = norm(n); if (!a) continue;
+      if (a === t) return 100;
+      const want = new Set(t.split(' ')), got = a.split(' ');
+      const shared = got.filter(w => want.has(w)).length;
+      best = Math.max(best, Math.round(shared / Math.max(want.size, got.length) * 80));
     }
-    const extra = { append_to_response: 'watch/providers' };
-    if (!hit) {
-      // Miniseries and TV docs on Letterboxd (e.g. Lonesome Dove) live under TV on TMDB.
-      const tv = await tmdb('/search/tv', { query: film.name, first_air_date_year: film.year || undefined });
-      const t = tv.results && tv.results[0];
-      if (!t) return { v: META_V, miss: true };
-      const d = await tmdb('/tv/' + t.id, extra);
-      return { v: META_V, id: t.id, tv: true, poster: d.poster_path || null, runtime: null,
-        genres: (d.genres || []).map(g => g.name), overview: d.overview || '',
-        providers: parseProviders(d['watch/providers']), pAt: Date.now() };
+    return best;
+  }
+  // Pick the search result that really is this film: same title (or very close) AND the same year, give or take one.
+  function pickBest(film, results, dateKey, titleKeys) {
+    const fy = film.year ? +film.year : null;
+    let best = null;
+    for (const r of results) {
+      const ts = titleScore(film.name, titleKeys.map(k => r[k]));
+      const y = r[dateKey] ? +r[dateKey].slice(0, 4) : null;
+      const d = fy && y ? Math.abs(y - fy) : null;
+      let ok;
+      if (!fy) ok = ts === 100;
+      else if (d === null) ok = ts === 100 && !y;
+      else ok = (ts === 100 && d <= 2) || (ts >= 55 && d <= 1);
+      if (!ok) continue;
+      const score = ts + (d === null ? 0 : d === 0 ? 40 : d === 1 ? 25 : 10) + Math.log10(1 + (r.vote_count || 0)) * 4;
+      if (!best || score > best.score) best = { r, score };
     }
-    const d = await tmdb('/movie/' + hit.id, extra);
-    return { v: META_V, id: d.id, poster: d.poster_path || null, runtime: d.runtime || null,
+    return best;
+  }
+  async function details(type, id) {
+    const d = await tmdb('/' + type + '/' + id, { append_to_response: 'watch/providers' });
+    const tv = type === 'tv';
+    const date = tv ? d.first_air_date : d.release_date;
+    return { v: META_V, id: d.id, tv, poster: d.poster_path || null, runtime: tv ? null : (d.runtime || null),
       genres: (d.genres || []).map(g => g.name), overview: d.overview || '',
-      providers: parseProviders(d['watch/providers']), pAt: Date.now() };
+      providers: parseProviders(d['watch/providers']), pAt: Date.now(),
+      mTitle: tv ? d.name : d.title, mYear: date ? +date.slice(0, 4) : null };
+  }
+  async function lookup(film) {
+    const seen = new Map(); let best = null;
+    const run = async (extra) => {
+      const res = await tmdb('/search/movie', { query: film.name, include_adult: 'false', ...extra });
+      for (const r of res.results || []) seen.set(r.id, r);
+      best = pickBest(film, [...seen.values()], 'release_date', ['title', 'original_title']);
+    };
+    const good = () => best && best.score >= 140;
+    if (film.year) {
+      await run({ primary_release_year: film.year });
+      if (!good()) await run({ year: film.year });
+    }
+    if (!good()) await run({});
+    if (!best && film.year) {
+      await run({ primary_release_year: +film.year + 1 });
+      if (!best) await run({ primary_release_year: +film.year - 1 });
+    }
+    if (best) return details('movie', best.r.id);
+    // Miniseries and TV docs on Letterboxd (e.g. Lonesome Dove) live under TV on TMDB.
+    const tv = await tmdb('/search/tv', { query: film.name });
+    const bt = pickBest(film, tv.results || [], 'first_air_date', ['name', 'original_name']);
+    if (bt) return details('tv', bt.r.id);
+    return { v: META_V, miss: true };
   }
   async function refreshProviders(film) {
     const m = state.meta[film.uri];
@@ -1575,7 +1634,7 @@ Date,Name,Year,Letterboxd URI
   }
   async function enrichAll() {
     if (state.busy || !state.key || !state.films.length) return;
-    const todo = state.films.filter(f => !state.meta[f.uri] || state.meta[f.uri].v !== META_V);
+    const todo = state.films.filter(f => { const m = state.meta[f.uri]; return !m || (m.v !== META_V && !m.manual); });
     if (!todo.length) { updateEnrichText(); if (!state.picks.length) ring(); return; }
     state.busy = true;
     const total = todo.length; let done = 0, authFail = false, netFail = 0, ok = 0, lastErr = '';
@@ -1632,7 +1691,36 @@ Date,Name,Year,Letterboxd URI
     const m = state.meta[f.uri];
     return !!m && !m.miss && m.genres.some(g => state.genres.has(g));
   }
-  const pool = () => state.films.filter(f => lengthOk(f) && genreOk(f));
+  const decadeOf = f => (f.year && /^\d{4}$/.test(f.year) ? Math.floor(+f.year / 10) * 10 : null);
+  function decadeOk(f) {
+    if (!state.decades.size) return true;
+    const d = decadeOf(f);
+    return d !== null && state.decades.has(d);
+  }
+  const pool = () => state.films.filter(f => lengthOk(f) && genreOk(f) && decadeOk(f));
+  function renderDecades() {
+    const counts = {};
+    for (const f of state.films) { const d = decadeOf(f); if (d !== null) counts[d] = (counts[d] || 0) + 1; }
+    const ds = Object.keys(counts).map(Number).sort((a, b) => a - b);
+    const box = $('decades'); box.textContent = '';
+    for (const d of [...state.decades]) if (!counts[d]) state.decades.delete(d);
+    const all = el('button', 'chip', 'All decades');
+    all.type = 'button';
+    all.setAttribute('aria-pressed', String(!state.decades.size));
+    all.onclick = () => { state.decades.clear(); store.set('decades', []); renderDecades(); updateRegister(); };
+    box.appendChild(all);
+    for (const d of ds) {
+      const b = el('button', 'chip', d + 's');
+      b.type = 'button';
+      b.appendChild(el('small', null, counts[d]));
+      b.setAttribute('aria-pressed', String(state.decades.has(d)));
+      b.onclick = () => {
+        state.decades.has(d) ? state.decades.delete(d) : state.decades.add(d);
+        store.set('decades', [...state.decades]); renderDecades(); updateRegister();
+      };
+      box.appendChild(b);
+    }
+  }
 
   function renderLengths() {
     const box = $('lengths'); box.textContent = '';
@@ -1674,7 +1762,7 @@ Date,Name,Year,Letterboxd URI
     const p = pool().length;
     $('register').textContent = `${n} FILMS · ${p} MATCH`;
   }
-  function refreshFilters() { renderGenres(); updateRegister(); updateEnrichText(); }
+  function refreshFilters() { renderGenres(); renderDecades(); updateRegister(); updateEnrichText(); }
 
   /* ---------- Cartridge slots ---------- */
   const CANDY = ['0,190,220', '140,110,255', '200,140,255', '255,190,40', '90,150,255'];
@@ -1759,7 +1847,45 @@ Date,Name,Year,Letterboxd URI
       st.appendChild(a);
     }
     info.appendChild(st);
+    if (m && !m.miss && m.mTitle && (norm(m.mTitle) !== norm(film.name) || (film.year && m.mYear && m.mYear !== +film.year)))
+      info.appendChild(el('span', 'matched', 'TMDB match: ' + m.mTitle + (m.mYear ? ' (' + m.mYear + ')' : '')));
+    info.appendChild(buildFix(film));
     return info;
+  }
+  function buildFix(film) {
+    const wrap = el('div', 'fix');
+    const btn = el('button', 'fixbtn', state.meta[film.uri] && state.meta[film.uri].manual ? 'Fixed by you · change' : 'Wrong film? Fix it');
+    btn.type = 'button';
+    const form = el('form', 'fixform'); form.hidden = true;
+    const inp = el('input'); inp.type = 'text'; inp.placeholder = 'Paste TMDB link'; inp.autocomplete = 'off';
+    inp.setAttribute('aria-label', 'TMDB link for ' + film.name);
+    const save = el('button', 'btn', 'Save'); save.type = 'submit';
+    form.append(inp, save);
+    const find = el('a', 'where', 'Find it on TMDB ↗');
+    find.href = 'https://www.themoviedb.org/search?query=' + encodeURIComponent(film.name + (film.year ? ' y:' + film.year : ''));
+    find.target = '_blank'; find.rel = 'noopener'; find.hidden = true;
+    const msg = el('span', 'fixmsg');
+    wrap.append(btn, find, form, msg);
+    btn.onclick = () => { form.hidden = !form.hidden; find.hidden = form.hidden; if (!form.hidden) inp.focus(); };
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const v = inp.value.trim();
+      const mm = v.match(/(movie|tv)\/(\d+)/) || (/^\d+$/.test(v) ? [null, 'movie', v] : null);
+      if (!mm) { msg.textContent = 'Paste a link like themoviedb.org/movie/12345'; return; }
+      msg.textContent = 'Loading…';
+      try {
+        const meta = await details(mm[1], mm[2]);
+        meta.manual = true;
+        state.meta[film.uri] = meta;
+        store.set('meta', state.meta);
+        const i = state.picks.indexOf(film);
+        if (i >= 0) $('windows').children[i].replaceWith(buildRoom(i, state.picks.length, film, false));
+        refreshFilters();
+      } catch (err) {
+        msg.textContent = err.message === 'auth' ? 'TMDB rejected the key.' : "Couldn't load that link. Check it and try again.";
+      }
+    };
+    return wrap;
   }
   async function freshenStreaming() {
     const picks = state.picks.slice();
@@ -1877,7 +2003,7 @@ Date,Name,Year,Letterboxd URI
   };
   $('reset').onclick = () => {
     store.clear();
-    Object.assign(state, { key: 'ffeacbacd83813f40718c9656fe70950', films: [], meta: {}, picks: [], length: 'any', genres: new Set() });
+    Object.assign(state, { key: 'ffeacbacd83813f40718c9656fe70950', films: [], meta: {}, picks: [], length: 'any', genres: new Set(), decades: new Set() });
     $('key').value = ''; $('key-state').textContent = ''; $('list-state').textContent = '';
     renderLengths(); refreshFilters(); renderWindows(false); setStatus('Everything cleared.');
   };
