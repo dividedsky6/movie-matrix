@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#A595DD">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Movie Matrix">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Movie Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: one see-through plastic device. Cartridge bay on top holds the picks; control deck below; circuit board shows through the shell. */
+  --frost: #E6DDF6;
+  --aqua: 140, 92, 225;
+  --ink: #2A1846;
+  --pcb: #5FAF8A;
+  --tangerine: #FF7A1A;
+  --lcd: #BFD0A8;
+  --display: "Michroma", "Eurostile", "Arial Black", sans-serif;
+  --body: "IBM Plex Mono", "Menlo", "Consolas", monospace;
+  --pixel: "VT323", "IBM Plex Mono", monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { background: var(--frost); }
+body {
+  background:
+    radial-gradient(45vw 45vw at 5% 0%, rgba(170, 120, 255, .55), transparent 70%),
+    radial-gradient(36vw 36vw at 100% 30%, rgba(255, 90, 200, .22), transparent 70%),
+    radial-gradient(45vw 34vw at 55% 110%, rgba(110, 60, 210, .45), transparent 70%),
+    linear-gradient(180deg, #E9DFFA, #CDB8F0);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding: calc(clamp(16px, 4vw, 48px) + env(safe-area-inset-top)) 16px calc(clamp(16px, 4vw, 48px) + env(safe-area-inset-bottom));
+}
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; }
+
+/* ---------- The shell ---------- */
+.device {
+  position: relative;
+  max-width: 1060px; margin: 0 auto;
+  border-radius: 40px;
+  padding: clamp(16px, 3vw, 34px);
+  background: linear-gradient(140deg, rgba(255,255,255,.5) 0%, rgba(150, 100, 235, .42) 40%, rgba(110, 60, 210, .58) 100%);
+  border: 1.5px solid rgba(255,255,255,.9);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.95),
+    inset 0 -18px 40px rgba(70, 20, 150, .25),
+    inset 0 0 0 10px rgba(255,255,255,.12),
+    0 40px 80px -30px rgba(60, 20, 120, .55);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  isolation: isolate;
+}
+.internals { position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .75; }
+/* gloss highlight */
+.device::after {
+  content: ""; position: absolute; left: 6%; right: 40%; top: 10px; height: 60px; border-radius: 40px; z-index: 3; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0));
+}
+.screw {
+  position: absolute; width: 16px; height: 16px; border-radius: 50%; z-index: 2;
+  background:
+    linear-gradient(45deg, transparent 44%, #7c8a92 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #7c8a92 44% 56%, transparent 56%),
+    radial-gradient(circle, #e7ecef 55%, #a9b6bd 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+.screw.tl { top: 16px; left: 16px; } .screw.tr { top: 16px; right: 16px; }
+.screw.bl { bottom: 16px; left: 16px; } .screw.br { bottom: 16px; right: 16px; }
+
+/* ---------- Header ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 4px 18px 20px; }
+.brand { display: grid; gap: 2px; }
+.brand h1 {
+  margin: 0; font-family: var(--display); font-weight: 400; letter-spacing: .08em;
+  font-size: clamp(22px, 3.6vw, 36px); line-height: 1.1;
+  background: linear-gradient(180deg, #ffffff 0%, #9fb3bd 48%, #4d6470 52%, #c9d6dc 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-stroke: .6px rgba(42,24,70,.55);
+}
+.brand h1 sup { font-size: .42em; letter-spacing: .1em; vertical-align: top; position: relative; top: .3em; }
+.brand p { margin: 0; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: #55407A; }
+.readout {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--lcd); color: #263a1c; border-radius: 8px; padding: 6px 14px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.8);
+  font-family: var(--pixel); font-size: 22px; letter-spacing: .06em; font-variant-numeric: tabular-nums;
+}
+.led { width: 10px; height: 10px; border-radius: 50%; background: #39d353; box-shadow: 0 0 8px #39d353, inset 0 -2px 2px rgba(0,0,0,.2); animation: blink 2.4s infinite; }
+@keyframes blink { 0%, 88% { opacity: 1; } 92% { opacity: .25; } 100% { opacity: 1; } }
+
+/* ---------- Cartridge bay ---------- */
+.bay {
+  border-radius: 24px;
+  padding: clamp(16px, 3vw, 28px) clamp(10px, 2.4vw, 24px);
+  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(var(--aqua), .18));
+  box-shadow: inset 0 3px 10px rgba(70, 30, 130, .22), inset 0 -1px 0 rgba(255,255,255,.8);
+}
+.windows {
+  --cols: 5;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 176px));
+  justify-content: center;
+  gap: 24px clamp(10px, 2vw, 22px);
+}
+.slot { display: grid; gap: 10px; align-content: start; }
+.cart {
+  --c: 32,178,204;
+  position: relative;
+  padding: 18px 10px 20px;
+  border-radius: 14px 14px 6px 6px;
+  background: linear-gradient(160deg, rgba(255,255,255,.55), rgba(var(--c), .38) 40%, rgba(var(--c), .62));
+  border: 1.5px solid rgba(255,255,255,.85);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -8px 16px rgba(var(--c), .35), 0 10px 20px -8px rgba(var(--c), .7);
+  transition: transform .35s cubic-bezier(.3,.7,.2,1), opacity .35s;
+}
+.slot.out .cart { transform: translateY(-26px) scale(.96); opacity: 0; }
+.slot.out .lcd { opacity: .35; }
+.grip {
+  position: absolute; top: 6px; left: 50%; width: 46%; height: 6px; transform: translateX(-50%); border-radius: 3px;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.75) 0 3px, transparent 3px 7px);
+}
+.cart-window {
+  position: relative; aspect-ratio: 2 / 3; border-radius: 6px; overflow: hidden;
+  background: rgba(42,24,70,.18);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.7), 0 0 0 3px rgba(var(--c), .25);
+}
+.cart-window a { position: absolute; inset: 0; display: block; }
+.cart-window img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cart-window::after { /* plastic glare over the poster */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.38) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,.12) 100%);
+}
+.noposter, .empty {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center;
+  font-family: var(--display); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; line-height: 1.5;
+}
+.noposter { color: #fff; background: linear-gradient(160deg, rgba(var(--c), .7), rgba(42,24,70,.75)); }
+.empty {
+  color: rgba(42,24,70,.6);
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,.18) 0 8px, transparent 8px 16px);
+}
+.pins {
+  position: absolute; left: 18%; right: 18%; bottom: 6px; height: 8px; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #d9b45a 0 4px, transparent 4px 7px);
+  opacity: .9;
+}
+.lcd {
+  position: relative;
+  background: var(--lcd); color: #23361a;
+  border-radius: 6px; padding: 6px 30px 7px 9px; min-height: 76px;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.8);
+  display: grid; align-content: start; gap: 1px;
+  transition: opacity .3s;
+}
+.lcd .no { font-family: var(--pixel); font-size: 15px; letter-spacing: .1em; opacity: .7; line-height: 1; }
+.lcd .title { font-family: var(--pixel); font-size: 20px; line-height: 1.05; overflow-wrap: anywhere; }
+.lcd .meta { font-size: 10.5px; letter-spacing: .02em; opacity: .8; }
+.reroll {
+  position: absolute; right: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; cursor: pointer;
+  display: grid; place-items: center; color: #23361a; background: rgba(255,255,255,.25);
+}
+.reroll:hover { background: rgba(255,255,255,.6); }
+.reroll svg { width: 13px; height: 13px; }
+.info {
+  background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.9); border-radius: 8px;
+  padding: 8px 9px; display: grid; gap: 8px; box-shadow: 0 4px 10px -6px rgba(42,24,70,.35);
+  transition: opacity .3s;
+}
+.slot.out .info { opacity: .35; }
+.blurb { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--ink); }
+.blurb.dim { font-style: italic; opacity: .7; }
+.stream { display: grid; gap: 5px; border-top: 1px dashed rgba(42,24,70,.25); padding-top: 7px; }
+.stream-head { font-family: var(--display); font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase; color: #4A2F7A; }
+.providers { display: flex; flex-wrap: wrap; gap: 4px; }
+.prov {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 500; line-height: 1.2;
+  background: rgba(var(--aqua), .18); border: 1px solid rgba(var(--aqua), .55); border-radius: 6px; padding: 2px 6px 2px 2px;
+}
+.prov img { width: 16px; height: 16px; border-radius: 4px; display: block; }
+.none { font-size: 10.5px; font-style: italic; color: #5D4A80; }
+.where { font-size: 10.5px; color: #6A2FB8; font-weight: 500; }
+
+/* ---------- Control deck ---------- */
+.deck {
+  margin-top: 22px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 22px 32px; align-items: center;
+  padding: clamp(14px, 2.4vw, 24px);
+  border-radius: 24px;
+  background: rgba(255,255,255,.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -2px 10px rgba(70,30,130,.12);
+}
+.panel { display: grid; gap: 18px; }
+.row { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-start; }
+.label { display: block; font-family: var(--display); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: #4A2F7A; margin-bottom: 8px; }
+.label em { font-family: var(--body); font-style: italic; letter-spacing: 0; text-transform: none; opacity: .8; }
+.stepper { display: inline-flex; align-items: center; gap: 6px; }
+.stepper output {
+  min-width: 64px; text-align: center; background: var(--lcd); color: #23361a; border-radius: 6px; padding: 0 8px;
+  font-family: var(--pixel); font-size: 34px; line-height: 44px; font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.25);
+}
+.key, .chip, .btn {
+  cursor: pointer; border: 1.5px solid rgba(255,255,255,.9);
+  background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(var(--k, 140,92,225), .35));
+  box-shadow: inset 0 1px 0 #fff, inset 0 -3px 6px rgba(var(--k, 140,92,225), .35), 0 3px 0 rgba(var(--k, 140,92,225), .45), 0 6px 12px -6px rgba(42,24,70,.4);
+  color: var(--ink);
+  transition: transform .08s, box-shadow .08s, background .15s;
+}
+.key:active, .chip:active, .btn:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgba(var(--k, 140,92,225), .45); }
+.key { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; font-weight: 600; }
+.key:disabled { opacity: .4; cursor: default; transform: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border-radius: 10px; padding: 6px 11px; font-family: var(--body); font-size: 12.5px; font-weight: 500; }
+.chip small { opacity: .6; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] {
+  --k: 255,122,26;
+  background: linear-gradient(180deg, rgba(255,190,140,.9), rgba(255,122,26,.75));
+  color: #3a1600;
+}
+#lengths .chip { --k: 150,98,220; }
+#lengths .chip[aria-pressed="true"] { background: linear-gradient(180deg, rgba(210,185,245,.95), rgba(150,98,220,.75)); color: #1f0b3a; }
+.empty-note { margin: 0; font-style: italic; font-size: 13px; color: #55407A; }
+
+.pick-wrap { display: grid; justify-items: center; gap: 10px; }
+.pick {
+  width: 132px; height: 132px; border-radius: 50%; cursor: pointer;
+  border: 2px solid rgba(255,255,255,.95);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,0) 32%),
+    radial-gradient(circle at 50% 60%, rgba(255,150,70,.85), rgba(255,100,10,.9) 70%, rgba(200,70,0,.95));
+  box-shadow: 0 0 0 8px rgba(255,255,255,.35), 0 0 0 9.5px rgba(255,255,255,.8), 0 8px 0 #c25200, 0 18px 30px -8px rgba(255,122,26,.75);
+  color: #fff; font-family: var(--display); font-size: 20px; letter-spacing: .12em; text-shadow: 0 1px 2px rgba(120,40,0,.6);
+  transition: transform .08s, box-shadow .08s;
+}
+.pick:hover { filter: saturate(1.15) brightness(1.05); }
+.pick:active { transform: translateY(5px); box-shadow: 0 0 0 8px rgba(255,255,255,.35), 0 0 0 9.5px rgba(255,255,255,.8), 0 3px 0 #c25200, 0 8px 16px -8px rgba(255,122,26,.75); }
+.pick:disabled { filter: grayscale(.5); cursor: default; }
+.status { max-width: 240px; text-align: center; font-size: 12px; color: #4A2F7A; min-height: 18px; }
+.status.warn { color: #b3261e; font-weight: 500; }
+
+/* ---------- Setup compartment ---------- */
+.setup {
+  margin-top: 18px; border-radius: 18px; padding: 12px 18px;
+  background: rgba(255,255,255,.55); border: 1.5px dashed rgba(42,24,70,.3);
+}
+.setup summary { cursor: pointer; font-family: var(--display); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #4A2F7A; padding: 4px 0; }
+.setup-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 28px; margin: 14px 0 8px; }
+.step { display: grid; gap: 8px; align-content: start; }
+.step h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 12px; letter-spacing: .08em; }
+.step p { margin: 0; font-size: 12.5px; max-width: 65ch; }
+.step a { color: #6A2FB8; }
+.field { display: flex; flex-wrap: wrap; gap: 8px; }
+.field input {
+  flex: 1 1 180px; padding: 9px 10px; border-radius: 10px; border: 1.5px solid rgba(42,24,70,.35); background: rgba(255,255,255,.8); font-size: 13px;
+}
+.btn { border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 500; }
+.drop {
+  display: block; border: 2px dashed rgba(var(--aqua), .9); border-radius: 12px; padding: 14px; text-align: center; cursor: pointer;
+  background: rgba(255,255,255,.45); font-size: 12.5px;
+}
+.drop.over { background: rgba(var(--aqua), .25); }
+.progress { height: 10px; border-radius: 5px; background: rgba(42,24,70,.15); overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.2); }
+.progress div { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #39d353 0 10px, #2fb948 10px 12px); transition: width .2s; }
+.done { font-size: 12px; color: #1f7a3a; font-weight: 500; }
+
+footer { max-width: 1060px; margin: 18px auto 0; text-align: center; font-size: 11px; color: #5D4A80; }
+footer a { color: #6A2FB8; }
+
+
+/* ===== Atomic purple ===== */
+:root { --atomic: 104, 78, 190; }
+body {
+  background:
+    radial-gradient(40vw 40vw at 0% 0%, rgba(150, 210, 255, .4), transparent 65%),
+    radial-gradient(42vw 42vw at 100% 20%, rgba(150, 130, 240, .45), transparent 65%),
+    radial-gradient(55vw 40vw at 50% 115%, rgba(60, 40, 150, .6), transparent 70%),
+    linear-gradient(165deg, #D3CDF0 0%, #A595DD 45%, #6F5BBE 100%);
+  background-attachment: fixed;
+}
+.device {
+  background: linear-gradient(140deg, rgba(255,255,255,.42) 0%, rgba(var(--atomic), .5) 35%, rgba(80, 55, 170, .66) 100%);
+  border: 2px solid rgba(255,255,255,.8);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.9),
+    inset 0 -20px 50px rgba(40, 20, 110, .4),
+    inset 0 0 0 10px rgba(255,255,255,.08),
+    0 0 0 6px rgba(170, 155, 235, .35),
+    0 0 46px rgba(120, 100, 230, .5),
+    0 40px 80px -30px rgba(30, 15, 90, .6);
+}
+.brand h1 {
+  background: linear-gradient(100deg, #ffffff 0%, #d9d2ff 20%, #bfe4ff 40%, #ffffff 55%, #cfc4ff 75%, #e8f4ff 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-stroke: 1.1px rgba(40, 20, 110, .85);
+  filter: drop-shadow(0 2px 0 rgba(40, 20, 110, .85)) drop-shadow(0 0 10px rgba(190, 220, 255, .55));
+}
+.brand p { color: #fff; text-shadow: 0 1px 0 rgba(40,20,110,.55); }
+.bay { background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(var(--atomic), .2)); box-shadow: inset 0 3px 12px rgba(30, 15, 90, .4), inset 0 -1px 0 rgba(255,255,255,.8); }
+.lcd, .readout, .stepper output { background: #C9DDB0; }
+.info { background: rgba(244, 242, 255, .85); border-color: #fff; }
+.prov { background: rgba(var(--atomic), .12); border-color: rgba(var(--atomic), .55); }
+.deck, .setup { background: rgba(245, 243, 255, .42); }
+.label, .setup summary, .step h3 { color: #3F2A8C; }
+.key, .chip, .btn {
+  --k: var(--atomic);
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(175, 160, 235, .55) 55%, rgba(var(--atomic), .5));
+  border-radius: 999px;
+}
+.key { border-radius: 14px; }
+.chip[aria-pressed="true"], #lengths .chip[aria-pressed="true"] {
+  --k: 60, 35, 140;
+  background: linear-gradient(180deg, rgba(150, 130, 230, .95), rgba(70, 45, 160, .95));
+  color: #fff;
+}
+#lengths .chip { --k: var(--atomic); }
+.pick {
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,.9) 0 10%, rgba(255,255,255,0) 32%),
+    radial-gradient(circle at 50% 62%, rgba(140, 115, 235, .92), rgba(95, 65, 195, .95) 65%, rgba(55, 32, 140, .98));
+  box-shadow: 0 0 0 8px rgba(255,255,255,.4), 0 0 0 10px rgba(200, 190, 245, .9), 0 8px 0 #34207a, 0 0 36px rgba(120, 100, 235, .75);
+  text-shadow: 0 1px 3px rgba(20, 0, 80, .7);
+}
+.pick:active { box-shadow: 0 0 0 8px rgba(255,255,255,.4), 0 0 0 10px rgba(200, 190, 245, .9), 0 3px 0 #34207a, 0 0 22px rgba(120, 100, 235, .75); }
+.progress div { background: linear-gradient(90deg, #8fd3ff, #8c78e8, #5a3fc0); }
+.drop { border-color: rgba(var(--atomic), .8); background: rgba(255,255,255,.5); }
+.where, .step a { color: #4A2FB0; }
+footer { color: #2B1A66; }
+footer a { color: #3F2A8C; }
+/* sparkles */
+.sparkles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.sparkles i {
+  position: absolute; width: var(--s); height: var(--s);
+  background: #fff; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.95)) drop-shadow(0 0 12px rgba(160, 200, 255, .8));
+  animation: twinkle 3.2s ease-in-out infinite; animation-delay: var(--d);
+}
+@keyframes twinkle { 0%, 100% { opacity: .35; transform: scale(.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
+.device, footer { position: relative; z-index: 1; }
+
+@media (max-width: 720px) {
+  .windows { --cols: 2 !important; grid-template-columns: repeat(2, minmax(0, 176px)); }
+  .deck { grid-template-columns: 1fr; }
+  .device { border-radius: 28px; }
+  .top { padding: 18px 8px 16px; }
+  .readout { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sparkles i { animation: none; opacity: .8; }
+  .cart, .lcd, .progress div, .key, .chip, .btn, .pick { transition: none; }
+  .led { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="sparkles" aria-hidden="true"><i style="left:3%;top:8%;--s:26px;--d:0s"></i><i style="left:96%;top:5%;--s:18px;--d:0.8s"></i><i style="left:2%;top:46%;--s:14px;--d:1.6s"></i><i style="left:97%;top:38%;--s:30px;--d:0.4s"></i><i style="left:4%;top:88%;--s:22px;--d:2.1s"></i><i style="left:95%;top:84%;--s:16px;--d:1.2s"></i><i style="left:48%;top:1.5%;--s:14px;--d:2.6s"></i><i style="left:70%;top:96%;--s:20px;--d:0.6s"></i><i style="left:25%;top:97%;--s:12px;--d:1.9s"></i></div>
+
+<main class="device">
+  <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+  <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
+  <canvas id="internals" class="internals" aria-hidden="true"></canvas>
+
+  <header class="top">
+    <div class="brand">
+      <h1>MOVIE MATRIX</h1>
+      <p>Watchlist randomizer · dividedsky</p>
+    </div>
+    <div class="readout" aria-live="polite"><span class="led" aria-hidden="true"></span><span id="register">NO DISC</span></div>
+  </header>
+
+  <section class="bay" aria-label="Your picks">
+    <div class="windows" id="windows"></div>
+  </section>
+
+  <section class="deck" aria-label="Controls">
+    <div class="panel">
+      <div class="row">
+        <div>
+          <span class="label" id="count-label">How many</span>
+          <div class="stepper" role="group" aria-labelledby="count-label">
+            <button type="button" class="key" id="minus" aria-label="One fewer film">&minus;</button>
+            <output id="count">3</output>
+            <button type="button" class="key" id="plus" aria-label="One more film">+</button>
+          </div>
+        </div>
+        <div>
+          <span class="label" id="len-label">Length</span>
+          <div class="chips" role="group" aria-labelledby="len-label" id="lengths"></div>
+        </div>
+      </div>
+      <div>
+        <span class="label" id="genre-label">Genre <em>(pick any; a film matches if it has one of them)</em></span>
+        <div class="chips" role="group" aria-labelledby="genre-label" id="genres">
+          <p class="empty-note">Genres appear once film details have loaded.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pick-wrap">
+      <button type="button" class="pick" id="ring">PICK</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </section>
+
+  <details class="setup" id="checkin">
+    <summary>Setup</summary>
+    <div class="setup-body">
+      <div class="step">
+        <h3>1. TMDB key</h3>
+        <p>Posters, genres and runtimes come from TMDB. Make a free account, then copy the <b>API Key</b> or <b>API Read Access Token</b> from <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a>.</p>
+        <div class="field">
+          <input type="password" id="key" placeholder="Paste key or token" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn" id="save-key">Save</button>
+        </div>
+        <span class="done" id="key-state"></span>
+      </div>
+      <div class="step">
+        <h3>2. Watchlist</h3>
+        <p>Your Nov 23 export is built in. To update it, go to Letterboxd <a href="https://letterboxd.com/settings/data/" target="_blank" rel="noopener">Settings &rarr; Data &rarr; Export your data</a> and drop the ZIP or <code>watchlist.csv</code> here.</p>
+        <label class="drop" id="drop" for="file">
+          Drop ZIP or watchlist.csv here, or click to choose
+          <input type="file" id="file" accept=".zip,.csv,text/csv,application/zip" hidden>
+        </label>
+        <span class="done" id="list-state"></span>
+      </div>
+      <div class="step">
+        <h3>3. Film details</h3>
+        <p id="enrich-text">Once the key is in, each film is looked up on TMDB. This runs once and is remembered in this browser.</p>
+        <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+        <div class="field">
+          <button type="button" class="btn" id="retry">Look up missing films</button>
+          <button type="button" class="btn" id="reset">Forget everything</button>
+        </div>
+      </div>
+    </div>
+  </details>
+</main>
+<footer>Film data and posters from <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability from JustWatch. Click a poster to open the film on Letterboxd.</footer>
+
+<script type="text/csv" id="builtin-watchlist" data-date="Nov 23, 2026">
+Date,Name,Year,Letterboxd URI
+2021-06-03,The Heartbreak Kid,1972,https://boxd.it/11aM
+2021-06-04,Who's Afraid of Virginia Woolf?,1966,https://boxd.it/2atK
+2021-06-04,Day for Night,1973,https://boxd.it/28kG
+2021-06-09,The Apartment,1960,https://boxd.it/2aGE
+2021-06-09,Yojimbo,1961,https://boxd.it/1SRY
+2021-06-09,Army of Shadows,1969,https://boxd.it/1Mli
+2021-06-09,Le Cercle Rouge,1970,https://boxd.it/1Tjy
+2021-06-15,Manhattan,1979,https://boxd.it/29Na
+2021-06-18,Howl's Moving Castle,2004,https://boxd.it/23De
+2021-06-18,Princess Mononoke,1997,https://boxd.it/2b4w
+2021-06-18,Beverly Hills Cop II,1987,https://boxd.it/2b9G
+2021-06-18,Lethal Weapon 2,1989,https://boxd.it/29dQ
+2021-06-18,Margin Call,2011,https://boxd.it/CJ8
+2021-06-18,The 400 Blows,1959,https://boxd.it/2b1C
+2021-06-18,Gosford Park,2001,https://boxd.it/239e
+2021-06-18,The Bridge at Remagen,1969,https://boxd.it/1Ll2
+2021-06-18,The Irishman,2019,https://boxd.it/dYOq
+2021-06-18,Raging Bull,1980,https://boxd.it/28yI
+2021-06-18,The Color of Money,1986,https://boxd.it/1SSM
+2021-06-18,Burning,2018,https://boxd.it/hHUa
+2021-06-18,Okja,2017,https://boxd.it/dvXe
+2021-06-18,The Lost City of Z,2016,https://boxd.it/a7jS
+2021-06-18,Absence of Malice,1981,https://boxd.it/1F74
+2021-06-18,Thunderball,1965,https://boxd.it/29SE
+2021-06-19,Le Doulos,1962,https://boxd.it/1CVg
+2021-06-19,Super Troopers 2,2018,https://boxd.it/ECo
+2021-06-19,The Age of Innocence,1993,https://boxd.it/1WgM
+2021-06-20,Thelma & Louise,1991,https://boxd.it/28Ew
+2021-06-20,Superman II,1980,https://boxd.it/204q
+2021-06-20,Midnight Cowboy,1969,https://boxd.it/25Hi
+2021-06-20,Romeo + Juliet,1996,https://boxd.it/2ama
+2021-06-20,For Your Eyes Only,1981,https://boxd.it/29MG
+2021-06-20,The Living Daylights,1987,https://boxd.it/29Le
+2021-06-20,Never Say Never Again,1983,https://boxd.it/1a5w
+2021-06-20,Moonlight,2016,https://boxd.it/d6bE
+2021-06-20,Blade Runner 2049,2017,https://boxd.it/b8wK
+2021-06-20,Seven Samurai,1954,https://boxd.it/2axi
+2021-06-20,Star Wars: The Rise of Skywalker,2019,https://boxd.it/5xlK
+2021-06-20,The Beguiled,2017,https://boxd.it/dZ1k
+2021-06-20,The Bling Ring,2013,https://boxd.it/3lPY
+2021-06-21,The Handmaiden,2016,https://boxd.it/948A
+2021-06-21,One Flew Over the Cuckoo's Nest,1975,https://boxd.it/2aeA
+2021-06-21,Carlito's Way,1993,https://boxd.it/226e
+2021-06-22,La Dolce Vita,1960,https://boxd.it/2anC
+2021-06-22,L'Avventura,1960,https://boxd.it/23hs
+2021-06-22,La Notte,1961,https://boxd.it/10iU
+2021-06-22,L'Eclisse,1962,https://boxd.it/1CoG
+2021-06-22,McCabe & Mrs. Miller,1971,https://boxd.it/1ooC
+2021-06-22,Boyz n the Hood,1991,https://boxd.it/29Ug
+2021-06-22,All That Jazz,1979,https://boxd.it/1JB8
+2021-06-22,Full Metal Jacket,1987,https://boxd.it/2a1Q
+2021-06-22,It Follows,2014,https://boxd.it/87wo
+2021-06-22,Amélie,2001,https://boxd.it/2aUc
+2021-06-22,Requiem for a Dream,2000,https://boxd.it/29VI
+2021-06-22,Love in the Afternoon,1957,https://boxd.it/1HcK
+2021-06-23,Y Tu Mamá También,2001,https://boxd.it/28QM
+2021-06-23,Blue Jasmine,2013,https://boxd.it/50MI
+2021-06-23,Jules and Jim,1962,https://boxd.it/28rM
+2021-06-23,Do the Right Thing,1989,https://boxd.it/29gA
+2021-06-23,She's Gotta Have It,1986,https://boxd.it/1quC
+2021-06-23,Clockers,1995,https://boxd.it/1D7w
+2021-06-24,Dead Poets Society,1989,https://boxd.it/2aSg
+2021-06-24,Brooklyn,2015,https://boxd.it/5bdk
+2021-06-25,Anna Karenina,2012,https://boxd.it/3lyy
+2021-06-25,Another Round,2020,https://boxd.it/lkba
+2021-06-25,Barry Lyndon,1975,https://boxd.it/25A2
+2021-07-01,St. Elmo's Fire,1985,https://boxd.it/1TyS
+2021-07-02,Anatomy of a Murder,1959,https://boxd.it/2baa
+2021-07-02,Pierrot le Fou,1965,https://boxd.it/26j2
+2021-07-02,Spartacus,1960,https://boxd.it/29bq
+2021-07-02,Band of Outsiders,1964,https://boxd.it/20Aw
+2021-07-06,Last Action Hero,1993,https://boxd.it/1YhW
+2021-07-09,The Souvenir,2019,https://boxd.it/gXU4
+2021-07-14,Catch-22,1970,https://boxd.it/1WrK
+2021-07-14,The Birdcage,1996,https://boxd.it/1UTi
+2021-07-15,The Deer Hunter,1978,https://boxd.it/1T6O
+2021-07-16,Battleship Potemkin,1925,https://boxd.it/29Vo
+2021-07-20,The Cool School,2008,https://boxd.it/Bzc
+2021-07-20,One False Move,1991,https://boxd.it/1Cpu
+2021-07-23,Shakespeare in Love,1998,https://boxd.it/27Pe
+2021-07-23,Diner,1982,https://boxd.it/1Pro
+2021-07-24,Lawrence of Arabia,1962,https://boxd.it/2wRE
+2021-07-24,It Happened One Night,1934,https://boxd.it/25Ng
+2021-07-24,Unforgiven,1992,https://boxd.it/6Z4
+2021-07-30,Happy Together,1997,https://boxd.it/1Ha0
+2021-08-11,The Place Beyond the Pines,2012,https://boxd.it/3mDu
+2021-08-11,Matador,1986,https://boxd.it/20EI
+2021-08-15,Patton,1970,https://boxd.it/1UnQ
+2021-08-16,M,1931,https://boxd.it/29vq
+2021-08-16,Mildred Pierce,1945,https://boxd.it/25uS
+2021-08-18,Passage to Marseille,1944,https://boxd.it/1Hk0
+2021-08-19,Being John Malkovich,1999,https://boxd.it/2ahu
+2021-08-19,"Synecdoche, New York",2008,https://boxd.it/23zw
+2021-08-19,Adaptation.,2002,https://boxd.it/26mA
+2021-08-19,Juice,1992,https://boxd.it/1KK6
+2021-08-19,Juliet of the Spirits,1965,https://boxd.it/1FF6
+2021-08-22,Brazil,1985,https://boxd.it/2be2
+2021-08-22,The Caine Mutiny,1954,https://boxd.it/1WTk
+2021-08-26,The Yakuza,1974,https://boxd.it/1pEm
+2021-08-27,Born on the Fourth of July,1989,https://boxd.it/26A8
+2021-08-31,Stagecoach,1939,https://boxd.it/297S
+2021-08-31,Sabrina,1954,https://boxd.it/21tc
+2021-08-31,To Have and Have Not,1944,https://boxd.it/1Am4
+2021-09-03,Reds,1981,https://boxd.it/1Hhq
+2021-09-03,Mutiny on the Bounty,1935,https://boxd.it/1S5K
+2021-09-23,Touch of Evil,1958,https://boxd.it/28II
+2021-10-05,Belfast,2021,https://boxd.it/tefG
+2021-10-06,Mr. Jealousy,1997,https://boxd.it/vM0
+2021-10-15,2046,2004,https://boxd.it/29tu
+2021-10-16,The Card Counter,2021,https://boxd.it/nTH0
+2021-10-20,The Faculty,1998,https://boxd.it/1Z5C
+2021-10-21,The Hustler,1961,https://boxd.it/298G
+2021-10-21,The Verdict,1982,https://boxd.it/1y3Y
+2021-10-21,T2 Trainspotting,2017,https://boxd.it/5vTA
+2021-11-08,The Earrings of Madame de...,1953,https://boxd.it/2lom
+2021-11-15,Tokyo Story,1953,https://boxd.it/1HuY
+2021-11-17,The Queen,2006,https://boxd.it/292e
+2021-12-06,C'mon C'mon,2021,https://boxd.it/nrI0
+2021-12-09,Miller's Crossing,1990,https://boxd.it/2avG
+2021-12-15,The Last Boy Scout,1991,https://boxd.it/1YYQ
+2022-01-04,The China Syndrome,1979,https://boxd.it/2990
+2022-01-04,Urban Cowboy,1980,https://boxd.it/2wpg
+2022-01-04,The Last Days of Disco,1998,https://boxd.it/1JpQ
+2022-01-07,The Last Picture Show,1971,https://boxd.it/1weg
+2022-01-13,"Oslo, August 31st",2011,https://boxd.it/2xQC
+2022-01-16,The Souvenir: Part II,2021,https://boxd.it/gXTK
+2022-01-20,Good Morning,1959,https://boxd.it/2lkk
+2022-01-27,Meet Me in the Bathroom,2022,https://boxd.it/yoNI
+2022-02-24,Naked,1993,https://boxd.it/1BT4
+2022-02-26,The Prime of Miss Jean Brodie,1969,https://boxd.it/23fw
+2022-03-08,The Long Day Closes,1992,https://boxd.it/EMy
+2022-03-11,Freejack,1992,https://boxd.it/1Z5i
+2022-04-05,Force Majeure,2014,https://boxd.it/7UcA
+2022-04-05,The Hand of God,2021,https://boxd.it/r5uI
+2022-04-20,The Host,2006,https://boxd.it/28ZY
+2022-05-03,Submarine,2010,https://boxd.it/H4a
+2022-05-18,Whisper of the Heart,1995,https://boxd.it/17uy
+2022-05-18,The Big Chill,1983,https://boxd.it/1RHI
+2022-05-24,Glengarry Glen Ross,1992,https://boxd.it/1Yw8
+2022-05-24,The Kingdom of Dreams and Madness,2013,https://boxd.it/7oOi
+2022-05-25,Stalker,1979,https://boxd.it/28PO
+2022-05-29,Metropolis,1927,https://boxd.it/71a
+2022-05-29,SubUrbia,1996,https://boxd.it/1qlK
+2022-06-08,Cop Land,1997,https://boxd.it/27ly
+2022-06-11,Days of Being Wild,1990,https://boxd.it/1HbC
+2022-06-16,The Two Sights,2020,https://boxd.it/lO7M
+2022-06-16,State Funeral,2019,https://boxd.it/mRVs
+2022-06-17,Cléo from 5 to 7,1962,https://boxd.it/2agm
+2022-06-18,Witness for the Prosecution,1957,https://boxd.it/18H4
+2022-06-21,The Hudsucker Proxy,1994,https://boxd.it/1SJA
+2022-06-21,Paddington 2,2017,https://boxd.it/bCF8
+2022-06-21,Violent Cop,1989,https://boxd.it/1Rym
+2022-06-21,Light Sleeper,1992,https://boxd.it/1aKa
+2022-07-01,Shadows in Paradise,1986,https://boxd.it/73A
+2022-07-08,Before the Devil Knows You're Dead,2007,https://boxd.it/20Jy
+2022-07-09,National Theatre Live: Fleabag,2019,https://boxd.it/mXOW
+2022-07-12,The Great Beauty,2013,https://boxd.it/5ty6
+2022-07-14,mid90s,2018,https://boxd.it/fxIa
+2022-07-22,Song to Song,2017,https://boxd.it/aR5C
+2022-07-26,Bicycle Thieves,1948,https://boxd.it/23hW
+2022-07-28,DuckTales: The Movie – Treasure of the Lost Lamp,1990,https://boxd.it/1VgQ
+2022-07-28,The Killing of a Sacred Deer,2017,https://boxd.it/dZ5G
+2022-07-30,State of Siege,1972,https://boxd.it/3dao
+2022-07-31,Knight of Cups,2015,https://boxd.it/34Qq
+2022-07-31,Ed Wood,1994,https://boxd.it/2adM
+2022-08-08,Emily the Criminal,2022,https://boxd.it/wBOq
+2022-08-12,Decision to Leave,2022,https://boxd.it/qp9e
+2022-08-15,While We're Young,2014,https://boxd.it/7oOs
+2022-08-16,Black Sunday,1977,https://boxd.it/DNU
+2022-08-16,The Train,1964,https://boxd.it/25lm
+2022-08-17,Performance,1970,https://boxd.it/1txE
+2022-08-18,Judgment at Nuremberg,1961,https://boxd.it/29xc
+2022-08-18,Shaft,1971,https://boxd.it/2ais
+2022-08-21,The Great Race,1965,https://boxd.it/1TvY
+2022-08-25,Boiling Point,1990,https://boxd.it/1sQA
+2022-09-05,Calvary,2014,https://boxd.it/4WE6
+2022-09-16,Dark Passage,1947,https://boxd.it/1Ky0
+2022-10-03,The Brothers McMullen,1995,https://boxd.it/1KcI
+2022-10-06,Aftersun,2022,https://boxd.it/Arw0
+2022-10-07,Hackers,1995,https://boxd.it/1WhU
+2022-10-17,The Blair Witch Project,1999,https://boxd.it/26ua
+2022-11-15,Maps to the Stars,2014,https://boxd.it/4WCu
+2022-11-17,The Inland Sea,1991,https://boxd.it/cJru
+2022-12-05,"Jeanne Dielman, 23, quai du Commerce, 1080 Bruxelles",1975,https://boxd.it/T18
+2022-12-07,"Yes, Madam!",1985,https://boxd.it/13EE
+2022-12-08,News from Home,1976,https://boxd.it/34TO
+2022-12-24,The Rules of Attraction,2002,https://boxd.it/286Y
+2022-12-30,Come and See,1985,https://boxd.it/1w9q
+2023-01-09,Martha Marcy May Marlene,2011,https://boxd.it/CJs
+2023-01-13,Barcelona,1994,https://boxd.it/1JHq
+2023-01-18,The Inbetweeners Movie,2011,https://boxd.it/2v50
+2023-01-27,Koyaanisqatsi,1982,https://boxd.it/1U9E
+2023-01-27,Bullet Train,2022,https://boxd.it/qW26
+2023-02-08,Bob & Carol & Ted & Alice,1969,https://boxd.it/1tIM
+2023-02-08,Millennium Mambo,2001,https://boxd.it/1Tzw
+2023-02-09,Perfect Blue,1997,https://boxd.it/1W7A
+2023-02-09,Hoop Dreams,1994,https://boxd.it/1Opc
+2023-02-09,In the Name of the Father,1993,https://boxd.it/20I6
+2023-02-09,My Beautiful Laundrette,1985,https://boxd.it/1UhI
+2023-02-09,Masculin Féminin,1966,https://boxd.it/23UY
+2023-02-09,A Woman Under the Influence,1974,https://boxd.it/1myg
+2023-02-09,The Virgin Spring,1960,https://boxd.it/1TjI
+2023-02-09,Rachel Getting Married,2008,https://boxd.it/1N30
+2023-02-10,The Squid and the Whale,2005,https://boxd.it/1VAG
+2023-02-10,Before Sunset,2004,https://boxd.it/2bcg
+2023-02-10,Before Midnight,2013,https://boxd.it/4ive
+2023-02-10,As Tears Go By,1988,https://boxd.it/1ybI
+2023-02-12,Starship Troopers,1997,https://boxd.it/2a7k
+2023-02-12,The Red Shoes,1948,https://boxd.it/1EXI
+2023-02-13,Any Given Sunday,1999,https://boxd.it/1YmC
+2023-02-13,American Movie,1999,https://boxd.it/1Oty
+2023-02-13,The Celebration,1998,https://boxd.it/2aCM
+2023-02-24,Pink Floyd: The Wall,1982,https://boxd.it/1Sxk
+2023-02-24,Long Day's Journey Into Night,2018,https://boxd.it/hw1I
+2023-03-01,The Outsiders,1983,https://boxd.it/2aPw
+2023-03-01,To Be or Not to Be,1983,https://boxd.it/1zMA
+2023-03-01,Under Fire,1983,https://boxd.it/1RQA
+2023-03-01,A Matter of Life and Death,1946,https://boxd.it/1q6K
+2023-03-01,Ran,1985,https://boxd.it/1Tlu
+2023-03-03,"It's a Mad, Mad, Mad, Mad World",1963,https://boxd.it/1TvO
+2023-03-08,High Society,1956,https://boxd.it/1TSe
+2023-03-13,Ikiru,1952,https://boxd.it/251c
+2023-03-16,Somewhere,2010,https://boxd.it/14du
+2023-03-16,Portrait of a Lady on Fire,2019,https://boxd.it/jkPq
+2023-03-21,The Wild Bunch,1969,https://boxd.it/2a5y
+2023-03-22,Master and Commander: The Far Side of the World,2003,https://boxd.it/200S
+2023-03-22,Atonement,2007,https://boxd.it/24ui
+2023-03-22,John Wick: Chapter 3 – Parabellum,2019,https://boxd.it/gmFw
+2023-03-23,The Fountain,2006,https://boxd.it/28RU
+2023-03-24,Cabaret,1972,https://boxd.it/1Vpe
+2023-03-29,Barton Fink,1991,https://boxd.it/2aFQ
+2023-03-29,A Serious Man,2009,https://boxd.it/1RFW
+2023-03-30,Altered States,1980,https://boxd.it/1TBi
+2023-04-02,The Misfits,1961,https://boxd.it/1TCg
+2023-04-02,Rio Bravo,1959,https://boxd.it/2aE4
+2023-04-02,Beau Is Afraid,2023,https://boxd.it/u2gE
+2023-04-04,Mystic Pizza,1988,https://boxd.it/1UpC
+2023-04-04,Paris When It Sizzles,1964,https://boxd.it/1zZa
+2023-04-06,Deep Red,1975,https://boxd.it/1E1E
+2023-04-08,Harper,1966,https://boxd.it/1udK
+2023-04-12,The Outfit,1973,https://boxd.it/1teM
+2023-04-15,Opening Night,1977,https://boxd.it/1f4e
+2023-04-21,Mishima: A Life in Four Chapters,1985,https://boxd.it/1sBA
+2023-04-22,Face/Off,1997,https://boxd.it/29I0
+2023-04-25,Sabrina,1995,https://boxd.it/1SUI
+2023-04-27,The Meyerowitz Stories (New and Selected),2017,https://boxd.it/dSp0
+2023-04-28,Fatal Attraction,1987,https://boxd.it/1UTC
+2023-04-28,Mysterious Skin,2004,https://boxd.it/1UsG
+2023-04-28,Castle in the Sky,1986,https://boxd.it/1W4G
+2023-04-28,Videodrome,1983,https://boxd.it/29uC
+2023-04-28,Nausicaä of the Valley of the Wind,1984,https://boxd.it/2bc6
+2023-04-29,Wayne's World 2,1993,https://boxd.it/1ZHw
+2023-04-29,Basic Instinct,1992,https://boxd.it/2asM
+2023-05-01,The Best Little Whorehouse in Texas,1982,https://boxd.it/1Kgg
+2023-05-01,Basquiat,1996,https://boxd.it/2a9A
+2023-05-01,"Are You There God? It's Me, Margaret.",2023,https://boxd.it/kiYC
+2023-05-02,Demonlover,2002,https://boxd.it/1xz0
+2023-05-03,Until the End of the World,1991,https://boxd.it/1WuY
+2023-05-03,World on a Wire,1973,https://boxd.it/B9me
+2023-05-03,Sanjuro,1962,https://boxd.it/1TaQ
+2023-05-04,Spirited Away: Live on Stage,2022,https://boxd.it/BQhm
+2023-05-05,Trance,2013,https://boxd.it/2cAS
+2023-05-19,Uncle Boonmee Who Can Recall His Past Lives,2010,https://boxd.it/168Q
+2023-05-22,Strange Days,1995,https://boxd.it/2aGO
+2023-05-23,Silence,2016,https://boxd.it/2cAo
+2023-05-24,The New World,2005,https://boxd.it/1TVW
+2023-05-24,The Tree of Life,2011,https://boxd.it/1Zu8
+2023-05-25,I Used to Be Funny,2023,https://boxd.it/yzvU
+2023-05-28,Perfect Days,2023,https://boxd.it/ATh8
+2023-06-02,Fool for Love,1985,https://boxd.it/2rMu
+2023-06-06,The Friends of Eddie Coyle,1973,https://boxd.it/1vki
+2023-06-06,La Ciénaga,2001,https://boxd.it/kpk
+2023-06-11,Vengeance,2022,https://boxd.it/pu7U
+2023-06-17,About Last Night...,1986,https://boxd.it/1Hse
+2023-06-18,Ali: Fear Eats the Soul,1974,https://boxd.it/2aRi
+2023-06-18,The Bitter Tears of Petra von Kant,1972,https://boxd.it/1WzE
+2023-06-23,Close-Up,1990,https://boxd.it/1m9q
+2023-06-27,Wise Blood,1979,https://boxd.it/Xxs
+2023-06-29,The End of Violence,1997,https://boxd.it/MK6
+2023-06-29,Hammett,1982,https://boxd.it/2lfE
+2023-06-29,The Mother and the Whore,1973,https://boxd.it/HQe
+2023-07-01,Bloodsport,1988,https://boxd.it/1Tee
+2023-07-08,Breathless,1983,https://boxd.it/295W
+2023-07-08,A Fistful of Dollars,1964,https://boxd.it/2auo
+2023-07-10,Once Upon a Time in Northern Ireland,2023,https://boxd.it/GVjM
+2023-07-13,L.A. Story,1991,https://boxd.it/27qe
+2023-07-14,Heaven Can Wait,1978,https://boxd.it/1SkU
+2023-07-14,Women on the Verge of a Nervous Breakdown,1988,https://boxd.it/24GI
+2023-07-24,The Pelican Brief,1993,https://boxd.it/1Xt8
+2023-07-24,An Autumn Afternoon,1962,https://boxd.it/CUU
+2023-07-24,The Sacrifice,1986,https://boxd.it/1xg8
+2023-07-24,The Wind Rises,2013,https://boxd.it/4JQS
+2023-07-28,The Crimson Kimono,1959,https://boxd.it/1sEa
+2023-07-28,Modern Romance,1981,https://boxd.it/6Xi
+2023-07-29,Joan Didion: The Center Will Not Hold,2017,https://boxd.it/gYJ2
+2023-08-04,Alfie,1966,https://boxd.it/1LU2
+2023-08-04,Doctor Zhivago,1965,https://boxd.it/29jk
+2023-08-05,Diary of a Country Priest,1951,https://boxd.it/UDC
+2023-08-06,Sahara,1943,https://boxd.it/1Gk4
+2023-08-22,Le Mans,1971,https://boxd.it/22lo
+2023-08-23,Presumed Innocent,1990,https://boxd.it/1UEW
+2023-08-23,Witness,1985,https://boxd.it/1Z4O
+2023-08-27,Hotel Transylvania,2012,https://boxd.it/2DF6
+2023-08-29,Bram Stoker's Dracula,1992,https://boxd.it/223a
+2023-09-03,Vacation Friends,2021,https://boxd.it/ohEO
+2023-09-14,Red Desert,1964,https://boxd.it/1ttW
+2023-09-28,The Double Life of Véronique,1991,https://boxd.it/28va
+2023-10-12,The Caine Mutiny Court-Martial,2023,https://boxd.it/CuzA
+2023-10-27,Falling Down,1993,https://boxd.it/194M
+2023-10-30,Interview with the Vampire,1994,https://boxd.it/29XO
+2023-11-08,Squaring the Circle (The Story of Hipgnosis),2022,https://boxd.it/zQ2W
+2023-11-09,All of Us Strangers,2023,https://boxd.it/Bz3C
+2023-11-09,Evil Does Not Exist,2023,https://boxd.it/HJrc
+2023-11-09,Pacifiction,2022,https://boxd.it/pOfa
+2023-11-09,Varsity Blues,1999,https://boxd.it/1Nxu
+2023-11-10,Kings of the Road,1976,https://boxd.it/1Vhk
+2023-11-13,Mistress America,2015,https://boxd.it/9UfS
+2023-11-13,The Saragossa Manuscript,1965,https://boxd.it/1ZPA
+2023-11-17,Alien³,1992,https://boxd.it/20zS
+2023-11-27,Sunshine,2007,https://boxd.it/28Xy
+2023-11-29,Once Were Warriors,1994,https://boxd.it/2acY
+2023-12-01,The Leopard,1963,https://boxd.it/296K
+2023-12-04,Godzilla Minus One,2023,https://boxd.it/zu4c
+2023-12-09,This Is England,2006,https://boxd.it/1T44
+2023-12-10,Cure,1997,https://boxd.it/1blA
+2023-12-21,Gomorrah,2008,https://boxd.it/1ZG4
+2023-12-30,The Pigeon Tunnel,2023,https://boxd.it/HIzE
+2024-01-10,Gladiator II,2024,https://boxd.it/kqQQ
+2024-01-14,Billy Liar,1963,https://boxd.it/1tGQ
+2024-01-14,The Man Who Shot Liberty Valance,1962,https://boxd.it/1Tdg
+2024-01-21,My Old Ass,2024,https://boxd.it/zLP0
+2024-01-28,He Got Game,1998,https://boxd.it/1YBs
+2024-01-28,"Faraway, So Close!",1993,https://boxd.it/1Wh6
+2024-01-30,Rounders,1998,https://boxd.it/1WMS
+2024-01-31,Cape Fear,1962,https://boxd.it/1U4a
+2024-02-06,Long Day's Journey Into Night,1962,https://boxd.it/Vxq
+2024-02-06,Salinger,2013,https://boxd.it/5ve8
+2024-02-09,Carnal Knowledge,1971,https://boxd.it/1au2
+2024-02-10,Ghost World,2001,https://boxd.it/28Dy
+2024-02-13,Plus One,2019,https://boxd.it/inpo
+2024-02-18,Big Night,1996,https://boxd.it/1HnI
+2024-02-18,Tampopo,1985,https://boxd.it/1SZe
+2024-03-03,Blockers,2018,https://boxd.it/fxEW
+2024-03-05,Long Shot,2019,https://boxd.it/grG0
+2024-03-10,Northern Soul,2014,https://boxd.it/9pTi
+2024-03-12,Lips Like Sugar,,https://boxd.it/HwgK
+2024-03-13,Empire of the Sun,1987,https://boxd.it/1X4i
+2024-03-13,Serpico,1973,https://boxd.it/1ZjE
+2024-03-13,The Truth,1960,https://boxd.it/d3Q
+2024-03-14,Steel Magnolias,1989,https://boxd.it/1Vd8
+2024-03-17,The Boxer,1997,https://boxd.it/1Jo4
+2024-03-22,"Goodbye, Dragon Inn",2003,https://boxd.it/oFG
+2024-03-26,Crash,1996,https://boxd.it/29n2
+2024-03-26,Don's Plum,2001,https://boxd.it/17lQ
+2024-03-29,Ambulance,2022,https://boxd.it/sFxg
+2024-03-29,Play It as It Lays,1972,https://boxd.it/2ZhK
+2024-04-04,Ryuichi Sakamoto | Opus,2023,https://boxd.it/HJBm
+2024-04-12,What Ever Happened to Baby Jane?,1962,https://boxd.it/1WJE
+2024-04-18,STEVE! (martin) a documentary in 2 pieces,2024,https://boxd.it/LOr0
+2024-04-25,There's No Business Like Show Business,1954,https://boxd.it/1BQE
+2024-05-02,Incendies,2010,https://boxd.it/Msm
+2024-05-02,Internal Affairs,1990,https://boxd.it/1UJM
+2024-05-02,The Big Heat,1953,https://boxd.it/1NNM
+2024-05-02,Natural Born Killers,1994,https://boxd.it/2aNg
+2024-05-02,Married to the Mob,1988,https://boxd.it/26W4
+2024-05-06,Breaking Away,1979,https://boxd.it/1DMO
+2024-05-07,What a Way to Go!,1964,https://boxd.it/1z3K
+2024-05-10,City Slickers,1991,https://boxd.it/28P0
+2024-05-18,The Wizard of the Kremlin,2025,https://boxd.it/NhhA
+2024-06-04,L'Argent,1983,https://boxd.it/XIg
+2024-06-14,Stealing Beauty,1996,https://boxd.it/1NRu
+2024-06-14,True Grit,2010,https://boxd.it/Sog
+2024-06-17,A Bigger Splash,1973,https://boxd.it/4xJU
+2024-06-18,Can't Buy Me Love,1987,https://boxd.it/1R4c
+2024-06-20,Batman Returns,1992,https://boxd.it/2awa
+2024-06-21,Invasion of the Body Snatchers,1978,https://boxd.it/1SWk
+2024-06-22,Skate Kitchen,2018,https://boxd.it/hI3Q
+2024-06-22,Desert Hearts,1985,https://boxd.it/2aFc
+2024-06-22,The Man Who Knew Too Little,1997,https://boxd.it/1YKa
+2024-06-29,HyperNormalisation,2016,https://boxd.it/eOGy
+2024-07-06,BASEketball,1998,https://boxd.it/1OVs
+2024-07-09,American History X,1998,https://boxd.it/2bdo
+2024-07-17,Tenebre,1982,https://boxd.it/1mRM
+2024-08-30,Nowhere,1997,https://boxd.it/286E
+2024-09-07,Hayao Miyazaki and the Heron,2024,https://boxd.it/Njam
+2024-09-11,City of God,2002,https://boxd.it/2a2a
+2024-09-16,Heretic,2024,https://boxd.it/H1lY
+2024-09-16,Blue Ruin,2013,https://boxd.it/5H8G
+2024-09-28,Bachelor Party,1984,https://boxd.it/1S64
+2024-09-28,The Fall,2006,https://boxd.it/1NoM
+2024-10-07,September 5,2024,https://boxd.it/JYsI
+2024-10-12,Lone Star,1996,https://boxd.it/1tge
+2024-10-24,Pavements,2024,https://boxd.it/EekI
+2024-10-25,Black Sunday,1960,https://boxd.it/1rlG
+2024-10-28,Blood and Black Lace,1964,https://boxd.it/1qme
+2024-11-02,Bogart: Life Comes in Flashes,2024,https://boxd.it/Nugg
+2024-11-07,The Bride Wore Black,1968,https://boxd.it/24Ia
+2024-11-11,The Killing Fields,1984,https://boxd.it/29Yi
+2024-11-17,"Miyazaki, Spirit of Nature",2024,https://boxd.it/Oo54
+2024-11-20,Nickel Boys,2024,https://boxd.it/CStQ
+2024-11-20,My Man Godfrey,1936,https://boxd.it/1PTC
+2024-11-20,Cruel Intentions,1999,https://boxd.it/29Be
+2024-11-20,Sullivan's Travels,1941,https://boxd.it/1Ko0
+2024-11-30,Blue Thunder,1983,https://boxd.it/21NG
+2024-12-23,The Running Man,2025,https://boxd.it/u36A
+2024-12-24,The Guns of Navarone,1961,https://boxd.it/1V62
+2025-01-01,Once Upon a Time in the West,1968,https://boxd.it/2az4
+2025-01-01,The Magnificent Seven,1960,https://boxd.it/29bA
+2025-01-01,Zulu,1964,https://boxd.it/1O6Y
+2025-01-03,Hamlet,1996,https://boxd.it/1VZc
+2025-01-03,The Snows of Kilimanjaro,1952,https://boxd.it/24ja
+2025-01-03,Solaris,1972,https://boxd.it/2a2Y
+2025-01-03,The Conformist,1970,https://boxd.it/20cE
+2025-01-03,The Childhood of a Leader,2015,https://boxd.it/aRce
+2025-01-04,To Die For,1995,https://boxd.it/2a5o
+2025-01-04,My Best Friend's Wedding,1997,https://boxd.it/1ZHm
+2025-01-07,Murder Mystery,2019,https://boxd.it/iEBm
+2025-01-14,Insomnia,2002,https://boxd.it/2aB0
+2025-01-14,Dead Reckoning,1946,https://boxd.it/1D6e
+2025-01-15,A Face in the Crowd,1957,https://boxd.it/2lyc
+2025-01-15,My Favorite Brunette,1947,https://boxd.it/1Gy6
+2025-01-16,Rocco and His Brothers,1960,https://boxd.it/20bG
+2025-01-16,Vox Lux,2018,https://boxd.it/fcFk
+2025-01-16,Ziegfeld Girl,1941,https://boxd.it/1gOM
+2025-01-16,Beat the Devil,1953,https://boxd.it/1A8w
+2025-01-16,The Ministry of Ungentlemanly Warfare,2024,https://boxd.it/u5zu
+2025-01-18,Coming 2 America,2021,https://boxd.it/hrdu
+2025-01-22,Gleaming the Cube,1989,https://boxd.it/28S4
+2025-01-26,If I Had Legs I'd Kick You,2025,https://boxd.it/HUtS
+2025-01-30,I Am Cuba,1964,https://boxd.it/1hUQ
+2025-01-30,Che: Part One,2008,https://boxd.it/1ZGe
+2025-02-02,The Man Who Knew Too Much,1956,https://boxd.it/2a5S
+2025-02-02,The Ipcress File,1965,https://boxd.it/1MzE
+2025-02-02,Marley,2012,https://boxd.it/3aT6
+2025-02-02,After the Fox,1966,https://boxd.it/1FCQ
+2025-02-05,High Noon,1952,https://boxd.it/2aGa
+2025-02-06,The Passion of Joan of Arc,1928,https://boxd.it/29DO
+2025-02-09,The Florida Project,2017,https://boxd.it/dMG0
+2025-02-18,Style Wars,1983,https://boxd.it/1n9w
+2025-02-19,Blue Moon,2025,https://boxd.it/Nzwy
+2025-02-22,Ad Astra,2019,https://boxd.it/ePzI
+2025-02-23,eXistenZ,1999,https://boxd.it/27Ni
+2025-02-28,Lost in America,1985,https://boxd.it/1shq
+2025-03-05,Youngblood,1986,https://boxd.it/1IDM
+2025-03-15,National Lampoon's European Vacation,1985,https://boxd.it/1TTc
+2025-03-19,Vivre Sa Vie,1962,https://boxd.it/28s6
+2025-03-26,An Unmarried Woman,1978,https://boxd.it/15kG
+2025-03-29,D.E.B.S.,2004,https://boxd.it/2aaS
+2025-04-10,Good Will Hunting,1997,https://boxd.it/2ahY
+2025-04-11,Wanda,1970,https://boxd.it/2OjK
+2025-04-11,Licence to Kill,1989,https://boxd.it/29L4
+2025-04-11,The Year of Living Dangerously,1982,https://boxd.it/1TBs
+2025-04-11,Salvador,1986,https://boxd.it/224i
+2025-04-11,Lion of the Desert,1980,https://boxd.it/1t3u
+2025-04-13,Kundun,1997,https://boxd.it/1XUe
+2025-04-20,New Jack City,1991,https://boxd.it/1UZK
+2025-04-21,Don't Look Now,1973,https://boxd.it/29fC
+2025-04-21,Da 5 Bloods,2020,https://boxd.it/lnXw
+2025-04-22,"New York, New York",1977,https://boxd.it/1Rw6
+2025-04-23,The Ghost and the Darkness,1996,https://boxd.it/1VTe
+2025-04-23,Leave Her to Heaven,1945,https://boxd.it/1IjC
+2025-04-26,State of Grace,1990,https://boxd.it/28ms
+2025-04-27,Alphaville,1965,https://boxd.it/20AG
+2025-04-30,Devil in a Blue Dress,1995,https://boxd.it/204A
+2025-05-03,Heaven Can Wait,1943,https://boxd.it/1Gpy
+2025-05-03,Cactus Flower,1969,https://boxd.it/2lie
+2025-05-05,The Roaring Twenties,1939,https://boxd.it/17J4
+2025-05-12,Night Call,2024,https://boxd.it/BQBw
+2025-05-13,The Social Life of Small Urban Spaces,1980,https://boxd.it/5rkw
+2025-05-16,Dead Man,1995,https://boxd.it/29h4
+2025-05-21,Johnny Dangerously,1984,https://boxd.it/1JF0
+2025-05-21,The Tailor of Panama,2001,https://boxd.it/26BA
+2025-05-29,No Bears,2022,https://boxd.it/ANxk
+2025-05-30,Jay Kelly,2025,https://boxd.it/EsWw
+2025-05-30,Father of the Bride,1991,https://boxd.it/1SWY
+2025-05-30,Relay,2024,https://boxd.it/Faee
+2025-06-05,The Gambler,1974,https://boxd.it/R4a
+2025-06-06,The End of the Tour,2015,https://boxd.it/7jIE
+2025-06-07,Crooklyn,1994,https://boxd.it/1efg
+2025-06-13,Masked and Anonymous,2003,https://boxd.it/1xOE
+2025-06-21,Hard to Kill,1990,https://boxd.it/1YlE
+2025-06-23,A Life Less Ordinary,1997,https://boxd.it/20Bu
+2025-06-26,Angel Heart,1987,https://boxd.it/29WG
+2025-06-28,The Inbetweeners 2,2014,https://boxd.it/77a6
+2025-06-30,The Raid,2011,https://boxd.it/3hBy
+2025-07-04,Part of the Weekend Never Dies,2008,https://boxd.it/15DS
+2025-07-04,LA 92,2017,https://boxd.it/g4Ca
+2025-07-04,Encino Man,1992,https://boxd.it/1Wls
+2025-07-06,Drop Dead Gorgeous,1999,https://boxd.it/1W8e
+2025-07-06,The Acid House,1998,https://boxd.it/1SeM
+2025-07-10,The Negotiator,2025,https://boxd.it/W94w
+2025-07-10,Pale Flower,1964,https://boxd.it/dGS
+2025-07-10,8MM,1999,https://boxd.it/20sC
+2025-07-12,Henry Fool,1997,https://boxd.it/18ow
+2025-07-25,No Other Choice,2025,https://boxd.it/nKiA
+2025-08-01,Charulata,1964,https://boxd.it/1bVy
+2025-08-03,Stand by Me,1986,https://boxd.it/2aOe
+2025-08-04,The Last Emperor,1987,https://boxd.it/29Ji
+2025-08-04,U.S. Marshals,1998,https://boxd.it/1T2M
+2025-08-04,A Single Man,2009,https://boxd.it/1dx4
+2025-08-04,The Jewel of the Nile,1985,https://boxd.it/1WAM
+2025-08-09,Kerouac's Road: The Beat of a Nation,2025,https://boxd.it/Ul40
+2025-08-14,Out of the Past,1947,https://boxd.it/29PK
+2025-08-15,On the Road,2012,https://boxd.it/2WCK
+2025-08-17,Shifty,2025,https://boxd.it/VJcE
+2025-08-23,Splendor in the Grass,1961,https://boxd.it/1pig
+2025-08-24,Far and Away,1992,https://boxd.it/1Ufi
+2025-08-28,The Roses,2025,https://boxd.it/MjnI
+2025-09-01,Cobra,1986,https://boxd.it/1XDM
+2025-09-05,Erupcja,2025,https://boxd.it/PHcq
+2025-09-11,The Holy Mountain,1973,https://boxd.it/20mu
+2025-09-16,Explorers,1985,https://boxd.it/1XE6
+2025-09-16,"Blood In, Blood Out",1993,https://boxd.it/1Y0Q
+2025-09-17,The Old Man & the Gun,2018,https://boxd.it/fd1q
+2025-09-30,Ride Lonesome,1959,https://boxd.it/1rjK
+2025-09-30,Extreme Prejudice,1987,https://boxd.it/1DMa
+2025-09-30,I... for Icarus,1979,https://boxd.it/1w6m
+2025-10-01,Kenny Dalglish,2025,https://boxd.it/XK7O
+2025-10-02,Prince of Darkness,1987,https://boxd.it/1ZKq
+2025-10-02,Pretty Maids All in a Row,1971,https://boxd.it/2hpK
+2025-10-04,Short Cuts,1993,https://boxd.it/29Nk
+2025-10-04,The Weather Underground,2002,https://boxd.it/1OKE
+2025-10-04,Black Panthers,1968,https://boxd.it/4BCe
+2025-10-05,Orwell: 2+2=5,2025,https://boxd.it/FyWY
+2025-10-07,Enola Holmes,2020,https://boxd.it/hX2o
+2025-11-04,Murder by Death,1976,https://boxd.it/228k
+2025-11-07,Zero Effect,1998,https://boxd.it/1KIO
+2025-11-10,The Last Wave,1977,https://boxd.it/2oOM
+2025-11-11,BlacKkKlansman,2018,https://boxd.it/hxL8
+2025-11-19,The Vietnam War,2017,https://boxd.it/h75q
+2025-11-19,Huey Long,1985,https://boxd.it/4j5Q
+2025-11-19,Lewis & Clark - The Journey of the Corps of Discovery,1997,https://boxd.it/4eXS
+2025-11-19,The Civil War,1990,https://boxd.it/1tWO
+2025-11-21,Alphabet City,1984,https://boxd.it/45x2
+2025-11-22,The Crying Game,1992,https://boxd.it/1TYc
+2025-11-22,Hidden Agenda,1990,https://boxd.it/JGq
+2025-11-23,In the Land of Saints and Sinners,2023,https://boxd.it/CQsQ
+2025-11-23,Patriot Games,1992,https://boxd.it/1XEA
+2025-11-23,Gerry Adams: A Ballymurphy Man,2025,https://boxd.it/QZMy
+2025-11-29,Red Rock West,1993,https://boxd.it/1Wi4
+2025-11-30,American Me,1992,https://boxd.it/1QBO
+2025-12-06,Night of the Dark Full Moon,1972,https://boxd.it/1mx8
+2025-12-09,Barking Dogs Never Bite,2000,https://boxd.it/1BLa
+2025-12-10,Death on the Nile,1978,https://boxd.it/24I0
+2025-12-15,My Left Foot: The Story of Christy Brown,1989,https://boxd.it/1WW4
+2025-12-15,Cover-Up,2025,https://boxd.it/WpP4
+2025-12-15,The Brothers Bloom,2008,https://boxd.it/1Bqm
+2025-12-17,Rancho Deluxe,1975,https://boxd.it/Xl2
+2025-12-17,Sleeping Dogs,1977,https://boxd.it/180u
+2025-12-17,The Lost Daughter,2021,https://boxd.it/kgww
+2025-12-17,National Theatre Live: Romeo and Juliet,2021,https://boxd.it/tePY
+2025-12-18,A New Leaf,1971,https://boxd.it/19FS
+2026-01-04,Harold and Maude,1971,https://boxd.it/2axM
+2026-01-05,The SpongeBob Movie: Sponge on the Run,2020,https://boxd.it/e1Ac
+2026-01-08,Hud,1963,https://boxd.it/1x4Q
+2026-01-09,Mel Brooks: The 99 Year Old Man!,2026,https://boxd.it/10m2G
+2026-01-24,The Ballad of Wallis Island,2025,https://boxd.it/GqT0
+2026-01-26,The Gallerist,2026,https://boxd.it/R6Xe
+2026-01-29,Zi,2026,https://boxd.it/Zscq
+2026-01-30,Take That,2026,https://boxd.it/10ArA
+2026-01-31,Less Than Zero,1987,https://boxd.it/1PAA
+2026-02-01,Architecton,2024,https://boxd.it/KU6q
+2026-02-02,Lou Reed: Rock and Roll Heart,1998,https://boxd.it/4mEE
+2026-02-05,"Good Luck, Have Fun, Don't Die",2025,https://boxd.it/Glua
+2026-02-06,Murder on the Orient Express,1974,https://boxd.it/24IY
+2026-02-15,Crime 101,2026,https://boxd.it/IoGs
+2026-02-15,Out of Time,2003,https://boxd.it/27oW
+2026-02-17,Widows,2018,https://boxd.it/e6gc
+2026-02-17,Hearts of Darkness: A Filmmaker's Apocalypse,1991,https://boxd.it/24ai
+2026-02-24,The Fourth Protocol,1987,https://boxd.it/23FE
+2026-03-10,They Will Kill You,2026,https://boxd.it/Nk5i
+2026-03-11,The Cameraman,1928,https://boxd.it/1jag
+2026-03-14,The Wind That Shakes the Barley,2006,https://boxd.it/293Q
+2026-03-14,Bloody Sunday,2002,https://boxd.it/24NE
+2026-03-15,The Irish Pub,2013,https://boxd.it/7An4
+2026-03-15,'71,2014,https://boxd.it/7nWK
+2026-03-15,"I, Dolours",2018,https://boxd.it/iVWc
+2026-03-15,The Secret Army,2024,https://boxd.it/GF4Q
+2026-03-15,Provos: The IRA and Sinn Fein,1997,https://boxd.it/16dsi
+2026-03-18,The Longest Yard,1974,https://boxd.it/23vO
+2026-03-18,Kiss Me Deadly,1955,https://boxd.it/1HHe
+2026-03-18,Intermission,2003,https://boxd.it/1JrM
+2026-03-18,Papillon,1973,https://boxd.it/22kK
+2026-03-18,The Getaway,1972,https://boxd.it/22lS
+2026-03-24,First Man,2018,https://boxd.it/cPym
+2026-03-24,Guy and Madeline on a Park Bench,2009,https://boxd.it/N1G
+2026-03-24,The Neon Demon,2016,https://boxd.it/9AnW
+2026-03-24,Bleeder,1999,https://boxd.it/1HKs
+2026-03-26,The Weed Eaters,2025,https://boxd.it/UIik
+2026-04-02,The Awful Truth,1937,https://boxd.it/1NBc
+2026-04-02,Memories of Underdevelopment,1968,https://boxd.it/Kos
+2026-04-05,Palestine 36,2025,https://boxd.it/T09w
+2026-04-05,Palestine 87,2022,https://boxd.it/DlQu
+2026-04-08,The Last Temptation of Christ,1988,https://boxd.it/1ULe
+2026-04-13,Sex and the Single Girl,1964,https://boxd.it/1t72
+2026-04-13,Irma la Douce,1963,https://boxd.it/26sI
+2026-04-14,In Viaggio: The Travels of Pope Francis,2022,https://boxd.it/BYlQ
+2026-04-16,Hello Cubans,1963,https://boxd.it/4BC4
+2026-04-16,Investigation of a Citizen Above Suspicion,1970,https://boxd.it/1tRY
+2026-04-16,Nineteen Eighty-Four,1984,https://boxd.it/1YZE
+2026-04-16,Code Unknown,2000,https://boxd.it/1kaw
+2026-04-16,David Lynch: The Art Life,2016,https://boxd.it/eASq
+2026-04-16,The Piano Teacher,2001,https://boxd.it/2886
+2026-04-16,Grand Hotel,1932,https://boxd.it/1f2C
+2026-04-16,Over Your Dead Body,2026,https://boxd.it/RtwU
+2026-04-17,The Memory Police,,https://boxd.it/scb6
+2026-04-18,Cabin Boy,1994,https://boxd.it/1tX8
+2026-04-18,The Christophers,2025,https://boxd.it/RRrO
+2026-04-19,Saturday Night,2010,https://boxd.it/9kwe
+2026-04-19,The Blues Brothers Live at Winterland,1978,https://boxd.it/8lLi
+2026-04-19,The Rutles: All You Need Is Cash,1978,https://boxd.it/1Kea
+2026-04-19,The Passion of Anna,1969,https://boxd.it/Wus
+2026-04-21,Get Over It,2001,https://boxd.it/1Xda
+2026-04-21,Saving Grace,2000,https://boxd.it/26Sc
+2026-04-21,Open Your Eyes,1997,https://boxd.it/27TU
+2026-04-30,The Black Pirate,1926,https://boxd.it/Eua
+2026-04-30,Mike Wallace Is Here,2019,https://boxd.it/kLe4
+2026-04-30,Hope,2026,https://boxd.it/E3vU
+2026-04-30,Mortdecai,2015,https://boxd.it/6ioc
+2026-05-01,Funeral in Berlin,1966,https://boxd.it/1dVK
+2026-05-01,Breakdown: 1975,2025,https://boxd.it/Z2yq
+2026-05-01,Best of Enemies,2015,https://boxd.it/aktG
+2026-05-01,Shotgun Freeway: Drives Through Lost L.A.,1995,https://boxd.it/pNlw
+2026-05-01,The Count of Monte Cristo,2024,https://boxd.it/F1Nk
+2026-05-03,The Ghost Breakers,1940,https://boxd.it/1NKI
+2026-05-03,The Cat and the Canary,1939,https://boxd.it/1GcY
+2026-05-03,Night Train to Munich,1940,https://boxd.it/YZs
+2026-05-03,Pusher,1996,https://boxd.it/27wG
+2026-05-04,Kim,1950,https://boxd.it/3Ili
+2026-05-04,Twelfth Night,2012,https://boxd.it/aRt0
+2026-05-04,The Invite,2026,https://boxd.it/zRNY
+2026-05-05,Carolina Caroline,2025,https://boxd.it/OKiY
+2026-05-06,She's the One,1996,https://boxd.it/1U1U
+2026-05-06,The Professionals,1966,https://boxd.it/1AF6
+2026-05-17,Full Phil,2026,https://boxd.it/XVhq
+2026-05-18,Gundam,,https://boxd.it/jr8S
+2026-05-19,Klara and the Sun,2026,https://boxd.it/woXa
+2026-05-20,Minotaur,2026,https://boxd.it/w1Nc
+2026-05-23,Leviathan,2014,https://boxd.it/7Ub8
+2026-05-23,The Samurai and the Prisoner,2026,https://boxd.it/10t6g
+2026-05-23,How to Make a Killing,2026,https://boxd.it/gLi8
+2026-05-25,Wrongfully Accused,1998,https://boxd.it/1YJG
+2026-05-25,The Big Easy,1986,https://boxd.it/1UOW
+2026-05-25,Tequila Sunrise,1988,https://boxd.it/1WmU
+2026-05-25,Chelsea Girls,1966,https://boxd.it/28iU
+2026-05-25,The Eiger Sanction,1975,https://boxd.it/1DUo
+2026-05-25,On the Edge,2001,https://boxd.it/2N3G
+2026-05-25,Serial Mom,1994,https://boxd.it/1Tty
+2026-05-25,2 Days in the Valley,1996,https://boxd.it/1YM6
+2026-05-29,Shelter,2026,https://boxd.it/NfS0
+2026-05-30,Heaven's Prisoners,1996,https://boxd.it/19vy
+2026-05-30,Duelle (Une Quarantaine),1976,https://boxd.it/2WK
+2026-05-31,Darling,1965,https://boxd.it/1yfq
+2026-05-31,Prêt-à-Porter,1994,https://boxd.it/259U
+2026-05-31,Pitfall,1948,https://boxd.it/1vjE
+2026-05-31,Play Dirty,1969,https://boxd.it/1trQ
+2026-05-31,Sirāt,2025,https://boxd.it/HxJo
+2026-05-31,Weather Report Girl,1995,https://boxd.it/wp6c
+2026-06-01,The Story of the 2006 FIFA World Cup: The Official Film of 2006 FIFA World Cup Germany,2006,https://boxd.it/q9fq
+2026-06-01,Buffet Froid,1979,https://boxd.it/15YG
+2026-06-01,Femmes Fatales,1976,https://boxd.it/6QQ
+2026-06-01,City Hall,2020,https://boxd.it/rdGM
+2026-06-01,Ex Libris: The New York Public Library,2017,https://boxd.it/fSVY
+2026-06-01,Crazy Horse,2011,https://boxd.it/2SOs
+2026-06-01,Death Game,1977,https://boxd.it/353O
+2026-06-01,ZeroZeroZero,2020,https://boxd.it/pLDe
+2026-06-01,Audition,1999,https://boxd.it/1UHm
+2026-06-01,Ichi the Killer,2001,https://boxd.it/1Y1O
+2026-06-01,"Menus-Plaisirs, les Troisgros",2023,https://boxd.it/EJRS
+2026-06-01,Color of Night,1994,https://boxd.it/27nO
+2026-06-01,Poetic Justice,1993,https://boxd.it/20og
+2026-06-01,Red Rooms,2023,https://boxd.it/ym4c
+2026-06-01,Designation of Origin,2024,https://boxd.it/PHzY
+2026-06-02,The Prince and the Showgirl,1957,https://boxd.it/1yve
+2026-06-02,River of No Return,1954,https://boxd.it/27OU
+2026-06-02,Moon Zero Two,1969,https://boxd.it/1uwW
+2026-06-03,The Last Hurrah,1958,https://boxd.it/pO0
+2026-06-04,Non-Stop,2014,https://boxd.it/6FtO
+2026-06-09,Airplane II: The Sequel,1982,https://boxd.it/26uu
+2026-06-09,The Firm,1989,https://boxd.it/1IRO
+2026-06-09,Zidane: A 21st Century Portrait,2006,https://boxd.it/20bQ
+2026-06-09,Jean-Michel Basquiat,2026,https://boxd.it/HQ08
+2026-06-10,One Night at McCool's,2001,https://boxd.it/27le
+2026-06-10,National Theatre Live: Dear England,2024,https://boxd.it/JLla
+2026-06-10,Dear England,2026,https://boxd.it/13L3K
+2026-06-12,Pools,2024,https://boxd.it/w2U4
+2026-06-12,Supercool,2021,https://boxd.it/iDUi
+2026-06-12,Disneyland Handcrafted,2026,https://boxd.it/Xjto
+2026-06-13,The Football Factory,2004,https://boxd.it/1WBA
+2026-06-13,Shadows,1958,https://boxd.it/1M9c
+2026-06-15,Stasi FC,2023,https://boxd.it/JZBQ
+2026-06-15,"Take the Ball, Pass the Ball",2018,https://boxd.it/kjds
+2026-06-17,Restless Natives,1985,https://boxd.it/1moK
+2026-06-17,Ultras,2020,https://boxd.it/oSBi
+2026-06-17,Nothing But a Winner: The Alabama Football Story,2025,https://boxd.it/ViPk
+2026-06-17,The River,1951,https://boxd.it/Q3K
+2026-06-19,Babette's Feast,1987,https://boxd.it/1SYU
+2026-06-21,Escape to Victory,1981,https://boxd.it/1IMa
+2026-06-22,Dead Man's Wire,2025,https://boxd.it/M8wu
+2026-06-22,Suspicion,1982,https://boxd.it/b4P4
+2026-06-22,Zero Focus,1961,https://boxd.it/3QRQ
+2026-06-23,Her Private Hell,2026,https://boxd.it/UtHY
+2026-06-24,Rose of Nevada,2025,https://boxd.it/RQAq
+2026-06-24,Shocking Dark,1989,https://boxd.it/7DS
+2026-06-24,The Death of Yugoslavia,1995,https://boxd.it/MFFY
+2026-07-03,Against All Odds,1984,https://boxd.it/1AY8
+2026-07-03,Proof of Life,2000,https://boxd.it/1SBQ
+2026-07-03,The Weight,2026,https://boxd.it/T2Wq
+2026-07-03,Welcome to Sarajevo,1997,https://boxd.it/1N8E
+2026-07-04,Malcolm X,1992,https://boxd.it/27WE
+2026-07-04,Dead Presidents,1995,https://boxd.it/1TQi
+2026-07-07,The Living Wake,2007,https://boxd.it/TVK
+2026-07-10,Minions & Monsters,2026,https://boxd.it/Odry
+2026-07-10,The Wrong Girls,2026,https://boxd.it/KAAA
+2026-07-11,My Dinner with Andre,1981,https://boxd.it/1vLe
+2026-07-11,Phantom India,1969,https://boxd.it/2v3I
+2026-07-11,Viva Maria!,1965,https://boxd.it/1T3U
+2026-07-11,Mayhem,2017,https://boxd.it/fesW
+2026-07-11,Earth Girls Are Easy,1988,https://boxd.it/27bI
+2026-07-11,A Matter of Loaf and Death,2008,https://boxd.it/1O4S
+2026-07-11,Coriolanus,2011,https://boxd.it/3sog
+2026-07-11,"Yesterday, Today and Tomorrow",1963,https://boxd.it/VZE
+2026-07-11,The Decameron,1971,https://boxd.it/1fdq
+2026-07-11,Marriage Italian Style,1964,https://boxd.it/Fs0
+2026-07-11,Simon of the Desert,1965,https://boxd.it/1aXe
+2026-07-11,The Loves of Pharaoh,1922,https://boxd.it/3hTC
+2026-07-11,Angel,1937,https://boxd.it/SwY
+2026-07-11,Trouble in Paradise,1932,https://boxd.it/2aU2
+2026-07-11,So This Is Paris,1926,https://boxd.it/2g84
+2026-07-11,The Oyster Princess,1919,https://boxd.it/I6c
+2026-07-13,Dead Calm,1989,https://boxd.it/1W7K
+2026-07-14,Event Horizon,1997,https://boxd.it/20d8
+2026-07-14,Andrei Rublev,1966,https://boxd.it/29lg
+2026-07-14,Celtic Soul,2016,https://boxd.it/fcxA
+2026-07-14,One Man Up,2001,https://boxd.it/wsK
+2026-07-14,Prime Cut,1972,https://boxd.it/1s7K
+2026-07-16,Maddie's Secret,2025,https://boxd.it/WtfY
+2026-07-18,The Incomer,2026,https://boxd.it/XXr8
+2026-07-18,Ink,2026,https://boxd.it/X3MY
+2026-07-19,Dancer in the Dark,2000,https://boxd.it/71E
+2026-07-19,Lonesome Dove,1989,https://boxd.it/9ymM
+2026-07-19,The Carabineers,1963,https://boxd.it/yjK
+2026-07-19,Waking Life,2001,https://boxd.it/1Zdc
+2026-07-19,Ben-Hur,1959,https://boxd.it/29RQ
+2026-07-19,The 7th Voyage of Sinbad,1958,https://boxd.it/1M4w
+2026-07-19,Ulysses,1967,https://boxd.it/3XdS
+2026-07-19,"See No Evil, Hear No Evil",1989,https://boxd.it/1UqA
+2026-07-19,Good Burger 2,2023,https://boxd.it/FGhY
+2026-07-19,The Ballad of Buster Scruggs,2018,https://boxd.it/jB2q
+2026-07-19,Zazie dans le Métro,1960,https://boxd.it/26Co
+2026-07-19,Night Nurse,1931,https://boxd.it/Bvu
+2026-07-19,Night Nurse,2026,https://boxd.it/ZsGq
+2026-07-23,Tony,2026,https://boxd.it/OJaa
+2026-07-23,Carlos,2010,https://boxd.it/Uuq
+2026-07-30,Yedoye Travis: Fatherless Behavior,2026,https://boxd.it/11OHO
+2026-08-03,Lars and the Real Girl,2007,https://boxd.it/21tG
+2026-08-03,Ruby Sparks,2012,https://boxd.it/3w9O
+2026-08-05,Cape Fear,1991,https://boxd.it/28vu
+2026-08-05,The History of Concrete,2026,https://boxd.it/ZsHI
+2026-08-07,The Dink,2026,https://boxd.it/Qqse
+2026-08-08,Deep End,1970,https://boxd.it/i8m
+2026-08-08,The Living End,1992,https://boxd.it/1fRA
+2026-08-08,The Napa Boys,2025,https://boxd.it/WsDg
+2026-08-08,City Hunter,1993,https://boxd.it/1Uou
+2026-08-09,The Music Room,1958,https://boxd.it/29x2
+2026-08-10,Cow Belles,2006,https://boxd.it/1wXq
+2026-08-10,West Side Story,2021,https://boxd.it/iwt0
+2026-08-10,Jawbreaker,1999,https://boxd.it/1G7a
+2026-08-11,Solarbabies,1986,https://boxd.it/1a4y
+2026-08-13,Charley Varrick,1973,https://boxd.it/1s2q
+2026-08-16,The River,1997,https://boxd.it/uEk
+2026-08-16,The Final Girls,2015,https://boxd.it/9gv2
+2026-08-16,Paterson,2016,https://boxd.it/cRk2
+2026-08-17,A Nightmare on Elm Street Part 2: Freddy's Revenge,1985,https://boxd.it/1XiE
+2026-08-17,Under Fire,2025,https://boxd.it/Wee2
+2026-08-18,I'm All Right Jack,1959,https://boxd.it/1dh6
+2026-08-19,A View to a Kill,1985,https://boxd.it/29Lo
+2026-08-19,Chan Is Missing,1982,https://boxd.it/1OpG
+2026-08-21,Sherman's March,1985,https://boxd.it/Zh2
+2026-08-22,The Twelve Chairs,1970,https://boxd.it/1wMM
+2026-08-22,Down and Out in Beverly Hills,1986,https://boxd.it/1XtC
+2026-08-24,The Killer Elite,1975,https://boxd.it/1iJa
+2026-08-25,Wassup Rockers,2005,https://boxd.it/1GSq
+2026-08-25,Truck Turner,1974,https://boxd.it/1B1c
+2026-08-26,In the Mouth of Madness,1994,https://boxd.it/26vi
+2026-08-27,Rhinestone,1984,https://boxd.it/1JYc
+2026-08-27,Christmas at Dollywood,2019,https://boxd.it/ncja
+2026-09-04,1900,1976,https://boxd.it/24Zg
+2026-09-05,Some Came Running,1958,https://boxd.it/15lO
+2026-09-05,The Idiot(s),2026,https://boxd.it/URQU
+2026-09-05,Onslaught,2026,https://boxd.it/MYKI
+2026-09-07,Occupational Hazard: The First Coral Reefers,2026,https://boxd.it/10SAK
+2026-09-07,Drugstore Cowboy,1989,https://boxd.it/2aj6
+2026-09-09,Imitation of Life,1959,https://boxd.it/1efK
+2026-09-09,The Ground We Won,2015,https://boxd.it/aNRM
+2026-09-09,The Grand Tour: One For The Road,2024,https://boxd.it/PHde
+2026-09-09,Love Serenade,1996,https://boxd.it/4CM
+2026-09-10,Thrasher - King of the Road 2003,2003,https://boxd.it/gFZq
+2026-09-11,NAZA,2026,https://boxd.it/15YTy
+2026-09-12,The Inventor: Out for Blood in Silicon Valley,2019,https://boxd.it/kLa2
+2026-09-12,Enron: The Smartest Guys in the Room,2005,https://boxd.it/1R0k
+2026-09-12,Gonzo: The Life and Work of Dr. Hunter S. Thompson,2008,https://boxd.it/1R2U
+2026-09-12,Finding Fela,2014,https://boxd.it/7lpE
+2026-09-12,Musk,2026,https://boxd.it/Fta6
+2026-09-12,Ceasefire Massacre,2014,https://boxd.it/7ZfO
+2026-09-16,The Merry Widow,1934,https://boxd.it/TQg
+2026-09-17,Twisted Pair,2018,https://boxd.it/hRwW
+2026-09-18,Funeral Parade of Roses,1969,https://boxd.it/28Cg
+2026-09-19,Green Street Hooligans,2005,https://boxd.it/1ZA6
+2026-09-23,Whitmer Thomas: Terminal Crew of Dudes,2026,https://boxd.it/VlwK
+2026-09-25,The Wild Geese,1978,https://boxd.it/21cA
+2026-09-26,Destination Tokyo,1943,https://boxd.it/1zWU
+2026-09-30,Verity,2026,https://boxd.it/MYia
+2026-09-30,Oh. What. Fun.,2025,https://boxd.it/M5u6
+2026-09-30,40 Dates and 40 Nights,2026,https://boxd.it/SYOi
+2026-10-06,Artificial,2026,https://boxd.it/Vqxy
+2026-10-10,Dracula,1958,https://boxd.it/1STA
+2026-10-10,Fade to Black,1980,https://boxd.it/12Dq
+2026-10-12,Animals,2026,https://boxd.it/KXDC
+2026-10-13,Victorian Psycho,2026,https://boxd.it/R5ly
+2026-10-13,Stavros Halkias: Uncle Stav,2026,https://boxd.it/1261m
+2026-10-14,Lisztomania,1975,https://boxd.it/2gbs
+2026-10-14,The League of Gentlemen,1960,https://boxd.it/MuC
+2026-10-14,The Three Musketeers,1973,https://boxd.it/265E
+2026-10-15,The Last One for the Road,2025,https://boxd.it/UbvU
+2026-10-15,Your Mother Your Mother Your Mother,2026,https://boxd.it/TbtC
+2026-10-17,Jacob's Ladder,1990,https://boxd.it/270g
+2026-10-17,Ginger Snaps,2000,https://boxd.it/1XEg
+2026-10-17,"So Sweet, So Dead",1972,https://boxd.it/3zei
+2026-10-18,Studio 666,2022,https://boxd.it/xPEw
+2026-10-18,One Cut of the Dead,2017,https://boxd.it/iAFu
+2026-10-20,Friday the 13th Part VIII: Jason Takes Manhattan,1989,https://boxd.it/1WDm
+2026-10-24,The Package,2018,https://boxd.it/ibD4
+2026-10-26,Born in East L.A.,1987,https://boxd.it/1Fi2
+2026-10-26,John Prine: Live from Sessions at West 54th,1999,https://boxd.it/qh0y
+2026-10-26,House on Haunted Hill,1959,https://boxd.it/1Ln8
+2026-10-26,Deathgasm,2015,https://boxd.it/avNs
+2026-10-26,Haunted Honeymoon,1986,https://boxd.it/1yiO
+2026-10-26,Seized,2026,https://boxd.it/ZsYY
+2026-10-26,The Invisible Man,1933,https://boxd.it/1VoK
+2026-10-26,The Comedy of Terrors,1963,https://boxd.it/1nny
+2026-10-26,The Adventures of Robin Hood,1938,https://boxd.it/1V6G
+2026-10-26,The Hound of the Baskervilles,1939,https://boxd.it/1suY
+2026-10-26,The Adventures of Sherlock Holmes,1939,https://boxd.it/1ICa
+2026-10-26,Madhouse,1974,https://boxd.it/1oYg
+2026-10-26,The Fearless Vampire Killers,1967,https://boxd.it/25Ri
+2026-10-26,Topper Returns,1941,https://boxd.it/QSo
+2026-10-27,A Talent for Murder,2026,https://boxd.it/F1bK
+2026-10-27,True History of the Kelly Gang,2019,https://boxd.it/i6pm
+2026-10-27,Blue Jean,2022,https://boxd.it/AHhg
+2026-10-28,The Act of Killing,2012,https://boxd.it/44Cg
+2026-10-28,Mickey's Christmas Carol,1983,https://boxd.it/1NkU
+2026-10-28,The Making of Mickey's Christmas Carol,1984,https://boxd.it/KhHi
+2026-10-28,Pet Shop Days,2023,https://boxd.it/ENFQ
+2026-10-31,The Hand That Rocks the Cradle,1992,https://boxd.it/1UFK
+2026-11-03,Maniac Cop,1988,https://boxd.it/1OtS
+2026-11-03,Creepshow,1982,https://boxd.it/1KqU
+2026-11-03,The Dark Half,1993,https://boxd.it/1Wu0
+2026-11-03,Trick 'r Treat,2007,https://boxd.it/1zvE
+2026-11-04,Kate Berlant: Parmesan,2026,https://boxd.it/16DTO
+2026-11-05,Crash Land,2026,https://boxd.it/ZbiG
+2026-11-05,National Anthem,2023,https://boxd.it/EWDE
+2026-11-05,The Plan,2026,https://boxd.it/WD9m
+2026-11-05,Thunder Road,2018,https://boxd.it/i8Hs
+2026-11-05,Roger & Me,1989,https://boxd.it/289I
+2026-11-05,Primary Colors,1998,https://boxd.it/1YFY
+2026-11-05,Advise & Consent,1962,https://boxd.it/1J2M
+2026-11-05,The President's Analyst,1967,https://boxd.it/1y56
+2026-11-05,Seven Days in May,1964,https://boxd.it/1z7C
+2026-11-05,Primer,2004,https://boxd.it/6YA
+2026-11-05,Snoopy Presents: 12 Days of Snoopy,2026,https://boxd.it/16T5g
+2026-11-06,Barefoot in the Park,1967,https://boxd.it/1HVg
+2026-11-06,George Lucas' Star Tours,1986,https://boxd.it/GBwm
+2026-11-10,The Last House on the Left,1972,https://boxd.it/1M4m
+2026-11-10,Better Off Dead...,1985,https://boxd.it/1PFU
+2026-11-10,A Nightmare on Elm Street 3: Dream Warriors,1987,https://boxd.it/1X9W
+2026-11-10,Crime Wave,1953,https://boxd.it/1EOG
+2026-11-10,Messiah of Evil,1974,https://boxd.it/1wLY
+2026-11-10,Mouse,1997,https://boxd.it/4mjc
+2026-11-11,Cameron Winter at Carnegie Hall,2026,https://boxd.it/ZvZK
+2026-11-12,Dave,1993,https://boxd.it/1Txq
+2026-11-12,Executive Decision,1996,https://boxd.it/26We
+2026-11-13,Godzilla Minus Zero,2026,https://boxd.it/R9dS
+2026-11-13,Greenland,2020,https://boxd.it/j1Um
+2026-11-13,Jason Lives - Friday the 13th Part VI,1986,https://boxd.it/1WM4
+2026-11-13,Friday the 13th: A New Beginning,1985,https://boxd.it/1XWE
+2026-11-13,Hubie Halloween,2020,https://boxd.it/mQwm
+2026-11-16,Arlington Road,1999,https://boxd.it/295C
+2026-11-17,Kill the Jockey,2024,https://boxd.it/FNA4
+2026-11-18,Scrooge,1951,https://boxd.it/1QDg
+2026-11-18,Mayday,2026,https://boxd.it/H11k
+2026-11-18,The Van,1996,https://boxd.it/1SX8
+2026-11-19,The Troubles: A Secret History,2019,https://boxd.it/nwd2
+2026-11-19,The 4th Man,1983,https://boxd.it/1o7c
+2026-11-19,Comfort and Joy,1984,https://boxd.it/1lEW
+2026-11-19,Gregory's Girl,1980,https://boxd.it/1BpI
+2026-11-19,The Matchmaker,1997,https://boxd.it/1DrG
+2026-11-19,Blood Rage,1987,https://boxd.it/1pSI
+2026-11-20,Lenz III,2023,https://boxd.it/F9Wu
+</script>
+<script>
+(() => {
+  const TMDB = 'https://api.themoviedb.org/3';
+  const IMG = 'https://image.tmdb.org/t/p/w342';
+  const LENGTHS = [
+    { id: 'any', label: 'Any length', test: () => true },
+    { id: 'u100', label: 'Under 100 min', test: r => r != null && r < 100 },
+    { id: 'u120', label: 'Under 2 hours', test: r => r != null && r < 120 },
+    { id: 'o120', label: 'More than 2 hours', test: r => r != null && r >= 120 },
+  ];
+
+  const store = {
+    get(k, fallback) { try { const v = localStorage.getItem('gwh_' + k); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } },
+    set(k, v) { try { localStorage.setItem('gwh_' + k, JSON.stringify(v)); } catch {} },
+    clear() { try { Object.keys(localStorage).filter(k => k.startsWith('gwh_')).forEach(k => localStorage.removeItem(k)); } catch {} },
+  };
+
+  const state = {
+    key: store.get('key', '') || 'ffeacbacd83813f40718c9656fe70950',
+    films: store.get('films', []),       // [{name, year, uri}]
+    meta: store.get('meta', {}),         // uri -> {poster, runtime, genres} | {miss:true}
+    count: store.get('count', 3),
+    length: store.get('length', 'any'),
+    genres: new Set(store.get('genres', [])),
+    picks: [],
+    busy: false,
+  };
+
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- CSV / ZIP ---------- */
+  function parseCSV(text) {
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+        else f += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
+      else if (c !== '\r') f += c;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(r => r.some(x => x.trim()));
+  }
+  function filmsFromCSV(text) {
+    const rows = parseCSV(text.replace(/^﻿/, ''));
+    const head = rows.shift() || [];
+    const idx = n => head.findIndex(h => h.trim().toLowerCase() === n);
+    const iName = idx('name'), iYear = idx('year'), iUri = idx('letterboxd uri');
+    if (iName < 0) throw new Error('That CSV has no "Name" column. Use watchlist.csv from the Letterboxd export.');
+    return rows.map(r => ({
+      name: r[iName].trim(),
+      year: iYear >= 0 ? (r[iYear] || '').trim() : '',
+      uri: iUri >= 0 && r[iUri] ? r[iUri].trim() : 'https://letterboxd.com/search/' + encodeURIComponent(r[iName].trim()),
+    })).filter(f => f.name);
+  }
+  function loadScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Could not load the ZIP reader. Unzip the export and drop watchlist.csv instead.')); document.head.appendChild(s); });
+  }
+  async function readFile(file) {
+    if (/\.zip$/i.test(file.name) || file.type.includes('zip')) {
+      if (!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+      const zip = await JSZip.loadAsync(file);
+      const entry = zip.file(/(^|\/)watchlist\.csv$/i)[0];
+      if (!entry) throw new Error('No watchlist.csv found in that ZIP.');
+      return filmsFromCSV(await entry.async('string'));
+    }
+    return filmsFromCSV(await file.text());
+  }
+
+  /* ---------- TMDB ---------- */
+  async function tmdb(path, params = {}) {
+    const url = new URL(TMDB + path);
+    for (const [k, v] of Object.entries(params)) if (v != null && v !== '') url.searchParams.set(k, v);
+    const headers = { accept: 'application/json' };
+    const key = state.key.trim();
+    if (key.startsWith('eyJ')) headers.Authorization = 'Bearer ' + key; else url.searchParams.set('api_key', key);
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const r = await fetch(url, { headers });
+      if (r.status === 429) { await sleep(800 * (attempt + 1)); continue; }
+      if (r.status === 401) throw new Error('auth');
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    }
+    throw new Error('rate');
+  }
+  const META_V = 2;
+  const REGION = (() => {
+    const tag = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
+    const m = tag.match(/-([A-Za-z]{2})\b/);
+    return m ? m[1].toUpperCase() : 'US';
+  })();
+  const STALE_MS = 3 * 24 * 3600 * 1000;
+  function parseProviders(wp) {
+    const r = wp && wp.results && wp.results[REGION];
+    if (!r) return { stream: [], rentbuy: false, link: null };
+    const seen = new Set(), stream = [];
+    for (const p of [...(r.flatrate || []), ...(r.free || []), ...(r.ads || [])]) {
+      if (seen.has(p.provider_id)) continue;
+      seen.add(p.provider_id);
+      stream.push({ name: p.provider_name, logo: p.logo_path || null });
+    }
+    return { stream, rentbuy: !!((r.rent && r.rent.length) || (r.buy && r.buy.length)), link: r.link || null };
+  }
+  async function lookup(film) {
+    const tries = film.year
+      ? [{ primary_release_year: film.year }, { year: film.year }, {}]
+      : [{}];
+    let hit = null;
+    for (const extra of tries) {
+      const res = await tmdb('/search/movie', { query: film.name, include_adult: 'false', ...extra });
+      if (res.results && res.results.length) { hit = res.results[0]; break; }
+    }
+    const extra = { append_to_response: 'watch/providers' };
+    if (!hit) {
+      // Miniseries and TV docs on Letterboxd (e.g. Lonesome Dove) live under TV on TMDB.
+      const tv = await tmdb('/search/tv', { query: film.name, first_air_date_year: film.year || undefined });
+      const t = tv.results && tv.results[0];
+      if (!t) return { v: META_V, miss: true };
+      const d = await tmdb('/tv/' + t.id, extra);
+      return { v: META_V, id: t.id, tv: true, poster: d.poster_path || null, runtime: null,
+        genres: (d.genres || []).map(g => g.name), overview: d.overview || '',
+        providers: parseProviders(d['watch/providers']), pAt: Date.now() };
+    }
+    const d = await tmdb('/movie/' + hit.id, extra);
+    return { v: META_V, id: d.id, poster: d.poster_path || null, runtime: d.runtime || null,
+      genres: (d.genres || []).map(g => g.name), overview: d.overview || '',
+      providers: parseProviders(d['watch/providers']), pAt: Date.now() };
+  }
+  async function refreshProviders(film) {
+    const m = state.meta[film.uri];
+    if (!m || m.miss || !m.id || (m.pAt && Date.now() - m.pAt < STALE_MS)) return false;
+    try {
+      const wp = await tmdb((m.tv ? '/tv/' : '/movie/') + m.id + '/watch/providers');
+      m.providers = parseProviders(wp); m.pAt = Date.now();
+      store.set('meta', state.meta);
+      return true;
+    } catch { return false; }
+  }
+  async function enrichAll() {
+    if (state.busy || !state.key || !state.films.length) return;
+    const todo = state.films.filter(f => !state.meta[f.uri] || state.meta[f.uri].v !== META_V);
+    if (!todo.length) { updateEnrichText(); if (!state.picks.length) ring(); return; }
+    state.busy = true;
+    const total = todo.length; let done = 0, authFail = false, netFail = 0, ok = 0, lastErr = '';
+    $('checkin').open = true;
+    const tick = () => {
+      $('bar').style.width = (done / total * 100) + '%';
+      $('enrich-text').textContent = `Looking up films on TMDB: ${done} of ${total}`;
+    };
+    tick();
+    const queue = todo.slice();
+    const worker = async () => {
+      while (queue.length && !authFail && !(netFail >= 12 && ok === 0)) {
+        const f = queue.shift();
+        try { state.meta[f.uri] = await lookup(f); ok++; }
+        catch (e) { if (e.message === 'auth') { authFail = true; break; } netFail++; lastErr = e.message || String(e); }
+        done++; tick();
+        if (done % 15 === 0) { store.set('meta', state.meta); refreshFilters(); }
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, worker));
+    store.set('meta', state.meta);
+    state.busy = false;
+    refreshFilters();
+    if (!state.picks.length) await ring();
+    if (authFail) {
+      $('enrich-text').textContent = 'TMDB rejected that key. Check it was copied in full, then save it again.';
+      $('key-state').textContent = '';
+      setStatus('TMDB rejected the key. See Setup.', true);
+    } else if (ok === 0 && netFail) {
+      $('enrich-text').textContent = `Couldn't reach TMDB (${lastErr}). If you're viewing this inside the Claude app, download the file and open it in Chrome, Safari or Firefox. Otherwise check your connection and press "Look up missing films".`;
+      setStatus("Couldn't reach TMDB. See Setup for what to do.", true);
+    }
+  }
+  function updateEnrichText() {
+    const n = state.films.length;
+    if (!n) { $('enrich-text').textContent = 'Once both are in, each film is looked up on TMDB. This runs once and is remembered in this browser.'; $('bar').style.width = '0'; return; }
+    const found = state.films.filter(f => state.meta[f.uri] && !state.meta[f.uri].miss).length;
+    const missed = state.films.filter(f => state.meta[f.uri] && state.meta[f.uri].miss).length;
+    $('bar').style.width = (found + missed) / n * 100 + '%';
+    $('enrich-text').textContent = !state.key
+      ? 'Add a TMDB key to fetch posters, genres and runtimes.'
+      : `${found} of ${n} films have details.` + (missed ? ` ${missed} couldn't be matched; they still appear when no genre or length is chosen.` : '');
+  }
+
+  /* ---------- Filters ---------- */
+  function lengthOk(f) {
+    const L = LENGTHS.find(l => l.id === state.length) || LENGTHS[0];
+    if (L.id === 'any') return true;
+    const m = state.meta[f.uri];
+    return !!m && !m.miss && L.test(m.runtime);
+  }
+  function genreOk(f) {
+    if (!state.genres.size) return true;
+    const m = state.meta[f.uri];
+    return !!m && !m.miss && m.genres.some(g => state.genres.has(g));
+  }
+  const pool = () => state.films.filter(f => lengthOk(f) && genreOk(f));
+
+  function renderLengths() {
+    const box = $('lengths'); box.textContent = '';
+    for (const L of LENGTHS) {
+      const b = el('button', 'chip', L.label);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(state.length === L.id));
+      b.onclick = () => { state.length = L.id; store.set('length', L.id); renderLengths(); updateRegister(); };
+      box.appendChild(b);
+    }
+  }
+  function renderGenres() {
+    const counts = {};
+    for (const f of state.films) { const m = state.meta[f.uri]; if (m && m.genres) m.genres.forEach(g => counts[g] = (counts[g] || 0) + 1); }
+    const names = Object.keys(counts).sort();
+    const box = $('genres'); box.textContent = '';
+    if (!names.length) { box.appendChild(el('p', 'empty-note', 'Genres appear once film details have loaded.')); return; }
+    for (const g of [...state.genres]) if (!counts[g]) state.genres.delete(g);
+    const all = el('button', 'chip', 'All genres');
+    all.type = 'button';
+    all.setAttribute('aria-pressed', String(!state.genres.size));
+    all.onclick = () => { state.genres.clear(); store.set('genres', []); renderGenres(); updateRegister(); };
+    box.appendChild(all);
+    for (const g of names) {
+      const b = el('button', 'chip', g);
+      b.type = 'button';
+      b.appendChild(el('small', null, counts[g]));
+      b.setAttribute('aria-pressed', String(state.genres.has(g)));
+      b.onclick = () => {
+        state.genres.has(g) ? state.genres.delete(g) : state.genres.add(g);
+        store.set('genres', [...state.genres]); renderGenres(); updateRegister();
+      };
+      box.appendChild(b);
+    }
+  }
+  function updateRegister() {
+    const n = state.films.length;
+    if (!n) { $('register').textContent = 'NO DISC'; return; }
+    const p = pool().length;
+    $('register').textContent = `${n} FILMS · ${p} MATCH`;
+  }
+  function refreshFilters() { renderGenres(); updateRegister(); updateEnrichText(); }
+
+  /* ---------- Cartridge slots ---------- */
+  const CANDY = ['150,130,225', '90,175,230', '105,75,195', '200,200,220', '110,195,170'];
+  function metaLine(f) {
+    const m = state.meta[f.uri];
+    const bits = [];
+    if (f.year) bits.push(f.year);
+    if (m && m.runtime) bits.push(m.runtime + ' MIN');
+    else if (m && m.tv) bits.push('TV');
+    if (m && m.genres && m.genres.length) bits.push(m.genres.slice(0, 2).join(' / '));
+    return bits.join(' · ');
+  }
+  function buildRoom(i, n, film, out) {
+    const slot = el('article', 'slot' + (out ? ' out' : '') + (film ? '' : ' vacant'));
+    const cart = el('div', 'cart');
+    cart.style.setProperty('--c', CANDY[i % CANDY.length]);
+    cart.appendChild(el('span', 'grip'));
+    const win = el('div', 'cart-window');
+    if (film) {
+      const m = state.meta[film.uri];
+      const a = el('a'); a.href = film.uri; a.target = '_blank'; a.rel = 'noopener';
+      a.setAttribute('aria-label', `${film.name} on Letterboxd`);
+      if (m && m.poster) {
+        const img = new Image(); img.alt = ''; img.src = IMG + m.poster;
+        img.onerror = () => { img.replaceWith(el('div', 'noposter', film.name)); };
+        a.appendChild(img);
+      } else a.appendChild(el('div', 'noposter', film.name));
+      win.appendChild(a);
+    } else {
+      win.appendChild(el('div', 'empty', 'Insert film'));
+    }
+    cart.appendChild(win);
+    cart.appendChild(el('span', 'pins'));
+    slot.appendChild(cart);
+    const lcd = el('div', 'lcd');
+    lcd.appendChild(el('span', 'no', 'SLOT ' + String(i + 1).padStart(2, '0')));
+    lcd.appendChild(el('span', 'title', film ? film.name : '-- EMPTY --'));
+    lcd.appendChild(el('span', 'meta', film ? metaLine(film) : 'Press PICK'));
+    if (film) {
+      const rr = el('button', 'reroll');
+      rr.type = 'button'; rr.title = 'Swap this slot for another film'; rr.setAttribute('aria-label', `Swap ${film.name} for another film`);
+      rr.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>';
+      rr.onclick = () => swapRoom(i);
+      lcd.appendChild(rr);
+    }
+    slot.appendChild(lcd);
+    if (film) slot.appendChild(buildInfo(film));
+    return slot;
+  }
+  function shortBlurb(text) {
+    if (!text) return '';
+    const first = (text.match(/^.+?[.!?](?=\s|$)/) || [text])[0];
+    let s = first.length <= 190 ? first : text;
+    if (s.length > 190) s = s.slice(0, 180).replace(/\s+\S*$/, '') + '…';
+    return s;
+  }
+  function buildInfo(film) {
+    const m = state.meta[film.uri];
+    const info = el('div', 'info');
+    const blurb = el('p', 'blurb');
+    if (m && m.overview) { blurb.textContent = shortBlurb(m.overview); blurb.title = m.overview; }
+    else { blurb.textContent = m && !m.miss ? 'No description on TMDB.' : 'No details found for this one.'; blurb.classList.add('dim'); }
+    info.appendChild(blurb);
+    const st = el('div', 'stream');
+    const head = el('span', 'stream-head', 'Streaming · ' + REGION);
+    st.appendChild(head);
+    const p = m && m.providers;
+    const list = el('div', 'providers');
+    if (!p) list.appendChild(el('span', 'none', m && !m.miss ? 'Loading…' : 'No info'));
+    else if (p.stream.length) {
+      for (const pr of p.stream.slice(0, 4)) {
+        const chip = el('span', 'prov');
+        if (pr.logo) { const img = new Image(); img.alt = ''; img.src = 'https://image.tmdb.org/t/p/w45' + pr.logo; img.onerror = () => img.remove(); chip.appendChild(img); }
+        chip.appendChild(document.createTextNode(pr.name));
+        list.appendChild(chip);
+      }
+      if (p.stream.length > 4) list.appendChild(el('span', 'none', '+' + (p.stream.length - 4) + ' more'));
+    } else list.appendChild(el('span', 'none', p.rentbuy ? 'Not streaming · rent or buy' : 'Not streaming'));
+    st.appendChild(list);
+    if (p && p.link) {
+      const a = el('a', 'where', 'Where to watch ↗'); a.href = p.link; a.target = '_blank'; a.rel = 'noopener';
+      st.appendChild(a);
+    }
+    info.appendChild(st);
+    return info;
+  }
+  async function freshenStreaming() {
+    const picks = state.picks.slice();
+    await Promise.all(picks.map(async (f, i) => {
+      if (await refreshProviders(f)) {
+        const slot = $('windows').children[i];
+        if (slot && state.picks[i] === f) { const old = slot.querySelector('.info'); if (old) old.replaceWith(buildInfo(f)); }
+      }
+    }));
+  }
+  function renderWindows(animate) {
+    const box = $('windows');
+    const n = state.picks.length || state.count;
+    box.style.setProperty('--cols', Math.min(n, 5));
+    box.textContent = '';
+    for (let i = 0; i < n; i++) box.appendChild(buildRoom(i, n, state.picks[i] || null, animate && !reduced));
+    if (animate) openShutters();
+  }
+  async function openShutters() {
+    if (reduced) return;
+    await sleep(40);
+    for (const s of $('windows').children) { s.classList.remove('out'); await sleep(80); }
+  }
+  async function closeShutters() {
+    const slots = [...$('windows').children];
+    if (reduced || slots.every(s => s.classList.contains('vacant'))) return;
+    slots.forEach(s => s.classList.add('out'));
+    await sleep(360);
+  }
+
+  /* ---------- Picking ---------- */
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function setStatus(msg, warn) { $('status').textContent = msg; $('status').classList.toggle('warn', !!warn); }
+
+  async function ring() {
+    if (!state.films.length) {
+      $('checkin').open = true;
+      setStatus('Load your watchlist first: add a TMDB key and your Letterboxd export in Setup.', true);
+      return;
+    }
+    const p = pool();
+    if (!p.length) { setStatus('No films match those filters. Try another genre or length.', true); return; }
+    $('ring').disabled = true;
+    await closeShutters();
+    state.picks = shuffle(p.slice()).slice(0, state.count);
+    setStatus(state.picks.length < state.count
+      ? `Only ${state.picks.length} film${state.picks.length === 1 ? '' : 's'} match, so only ${state.picks.length === 1 ? 'that one is' : 'those are'} shown.`
+      : '');
+    renderWindows(true);
+    $('ring').disabled = false;
+    freshenStreaming();
+  }
+  async function swapRoom(i) {
+    const taken = new Set(state.picks.map(f => f.uri));
+    const options = pool().filter(f => !taken.has(f.uri));
+    if (!options.length) { setStatus('No other matching films left to swap in.', true); return; }
+    const slot = $('windows').children[i];
+    if (!reduced) { slot.classList.add('out'); await sleep(360); }
+    state.picks[i] = options[Math.floor(Math.random() * options.length)];
+    const fresh = buildRoom(i, state.picks.length, state.picks[i], !reduced);
+    slot.replaceWith(fresh);
+    if (!reduced) { await sleep(40); fresh.classList.remove('out'); }
+    freshenStreaming();
+    setStatus('');
+  }
+
+  /* ---------- Wiring ---------- */
+  function syncCount() {
+    $('count').textContent = state.count;
+    $('minus').disabled = state.count <= 1;
+    $('plus').disabled = state.count >= 10;
+    store.set('count', state.count);
+    if (!state.picks.length) renderWindows(false);
+  }
+  $('minus').onclick = () => { state.count = Math.max(1, state.count - 1); syncCount(); };
+  $('plus').onclick = () => { state.count = Math.min(10, state.count + 1); syncCount(); };
+  $('ring').onclick = ring;
+
+  $('key').value = state.key;
+  if (state.key) $('key-state').textContent = 'Key saved in this browser.';
+  $('save-key').onclick = () => {
+    state.key = $('key').value.trim();
+    store.set('key', state.key);
+    $('key-state').textContent = state.key ? 'Key saved in this browser.' : '';
+    for (const u in state.meta) if (state.meta[u].miss) delete state.meta[u];
+    enrichAll();
+  };
+
+  async function takeFile(file) {
+    if (!file) return;
+    try {
+      const films = await readFile(file);
+      if (!films.length) throw new Error('That watchlist is empty.');
+      state.films = films;
+      store.set('films', films);
+      state.picks = [];
+      $('list-state').textContent = `${films.length} films loaded.`;
+      refreshFilters();
+      renderWindows(false);
+      if (state.key) enrichAll(); else setStatus('Watchlist loaded. Add a TMDB key to see posters, genres and runtimes.');
+    } catch (e) {
+      $('list-state').textContent = '';
+      setStatus(e.message || 'Could not read that file.', true);
+    }
+  }
+  $('file').onchange = e => takeFile(e.target.files[0]);
+  const drop = $('drop');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); takeFile(e.dataTransfer.files[0]); });
+
+  $('retry').onclick = () => {
+    for (const u in state.meta) if (state.meta[u].miss) delete state.meta[u];
+    enrichAll();
+  };
+  $('reset').onclick = () => {
+    store.clear();
+    Object.assign(state, { key: 'ffeacbacd83813f40718c9656fe70950', films: [], meta: {}, picks: [], length: 'any', genres: new Set() });
+    $('key').value = ''; $('key-state').textContent = ''; $('list-state').textContent = '';
+    renderLengths(); refreshFilters(); renderWindows(false); setStatus('Everything cleared.');
+  };
+
+  /* ---------- Start ---------- */
+  renderLengths();
+  refreshFilters();
+  syncCount();
+  if (state.films.length) {
+    $('list-state').textContent = `${state.films.length} films loaded.`;
+    if (state.key) enrichAll(); else ring();
+  } else {
+    const builtin = document.getElementById('builtin-watchlist');
+    let films = [];
+    try { films = builtin ? filmsFromCSV(builtin.textContent.trim()) : []; } catch {}
+    if (films.length) {
+      state.films = films;
+      store.set('films', films);
+      $('list-state').textContent = `${films.length} films loaded from your ${builtin.dataset.date} export.`;
+      refreshFilters();
+      if (state.key) enrichAll();
+      else {
+        $('checkin').open = true;
+        ring().then(() => setStatus('Add your TMDB key in Setup to load posters and unlock genre and length.'));
+      }
+    } else {
+      $('checkin').open = true;
+      renderWindows(false);
+    }
+  }
+})();
+</script>
+<script>
+/* Visible internals: a circuit board drawn behind the purple plastic. */
+(() => {
+  const dev = document.querySelector('.device');
+  const c = document.getElementById('internals');
+  if (!dev || !c || !c.getContext) return;
+  function draw() {
+    const w = dev.clientWidth, h = dev.clientHeight;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    c.style.width = w + 'px'; c.style.height = h + 'px';
+    const x = c.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, w, h);
+    let seed = 20001123;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const R = (a, b) => a + rnd() * (b - a);
+    const rr = (px, py, pw, ph, r) => { x.beginPath(); x.roundRect ? x.roundRect(px, py, pw, ph, r) : x.rect(px, py, pw, ph); };
+
+    // board
+    const m = 26;
+    rr(m, m, w - 2 * m, h - 2 * m, 22);
+    x.fillStyle = 'rgba(28, 78, 70, .55)'; x.fill();
+    x.strokeStyle = 'rgba(210, 180, 110, .35)'; x.lineWidth = 2; x.stroke();
+
+    // copper trace buses with 45-degree jogs
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    const buses = Math.round((w * h) / 70000) + 6;
+    for (let b = 0; b < buses; b++) {
+      const n = Math.round(R(3, 8)), gap = R(4, 6.5);
+      const vertical = rnd() < .35;
+      let sx = R(m + 20, w - m - 60), sy = R(m + 20, h - m - 60);
+      const len1 = R(60, 260), jog = R(20, 90) * (rnd() < .5 ? -1 : 1), len2 = R(60, 300);
+      x.strokeStyle = 'rgba(214, 178, 96, .42)'; x.lineWidth = 1.4;
+      for (let i = 0; i < n; i++) {
+        const o = i * gap;
+        x.beginPath();
+        if (!vertical) {
+          x.moveTo(sx, sy + o); x.lineTo(sx + len1 + (jog > 0 ? -o : o) * .41, sy + o);
+          x.lineTo(sx + len1 + Math.abs(jog) + (jog > 0 ? -o : o) * .41, sy + o + jog);
+          x.lineTo(sx + len1 + Math.abs(jog) + len2, sy + o + jog);
+        } else {
+          x.moveTo(sx + o, sy); x.lineTo(sx + o, sy + len1 + (jog > 0 ? -o : o) * .41);
+          x.lineTo(sx + o + jog, sy + len1 + Math.abs(jog) + (jog > 0 ? -o : o) * .41);
+          x.lineTo(sx + o + jog, sy + len1 + Math.abs(jog) + len2);
+        }
+        x.stroke();
+      }
+      // solder pads at both ends
+      x.fillStyle = 'rgba(225, 205, 150, .55)';
+      for (let i = 0; i < n; i++) {
+        const o = i * gap;
+        if (!vertical) { x.fillRect(sx - 3, sy + o - 1.5, 4, 3); x.fillRect(sx + len1 + Math.abs(jog) + len2 - 1, sy + o + jog - 1.5, 4, 3); }
+        else { x.fillRect(sx + o - 1.5, sy - 3, 3, 4); x.fillRect(sx + o + jog - 1.5, sy + len1 + Math.abs(jog) + len2 - 1, 3, 4); }
+      }
+    }
+
+    // chips (QFP and DIP), placed without overlapping
+    const placed = [];
+    const free = (a) => placed.every(p => a.x + a.w + 30 < p.x || p.x + p.w + 30 < a.x || a.y + a.h + 30 < p.y || p.y + p.h + 30 < a.y);
+    const labels = ['MX-2000', 'VRAM 8K', 'CPU-Z80', 'LCD DRV', 'SRAM', 'AUDIO', 'PWR REG', 'ROM 1M'];
+    const chips = Math.max(5, Math.round((w * h) / 160000));
+    for (let k = 0, tries = 0; k < chips && tries < 400; tries++) {
+      const qfp = rnd() < .5;
+      const cw = qfp ? R(48, 90) : R(70, 130), ch = qfp ? cw : R(26, 40);
+      const a = { x: R(m + 30, w - m - cw - 30), y: R(m + 30, h - m - ch - 30), w: cw, h: ch };
+      if (!free(a)) continue;
+      placed.push(a); k++;
+      // pins
+      x.fillStyle = 'rgba(200, 205, 215, .75)';
+      const pitch = 6;
+      for (let px = a.x + 6; px < a.x + a.w - 4; px += pitch) {
+        x.fillRect(px, a.y - 5, 2.4, 5); x.fillRect(px, a.y + a.h, 2.4, 5);
+      }
+      if (qfp) for (let py = a.y + 6; py < a.y + a.h - 4; py += pitch) {
+        x.fillRect(a.x - 5, py, 5, 2.4); x.fillRect(a.x + a.w, py, 5, 2.4);
+      }
+      // body
+      rr(a.x, a.y, a.w, a.h, 3);
+      const g = x.createLinearGradient(a.x, a.y, a.x, a.y + a.h);
+      g.addColorStop(0, 'rgba(48, 44, 58, .95)'); g.addColorStop(1, 'rgba(22, 20, 30, .95)');
+      x.fillStyle = g; x.fill();
+      x.fillStyle = 'rgba(255,255,255,.18)';
+      x.beginPath(); x.arc(a.x + 7, a.y + 7, 2.2, 0, Math.PI * 2); x.fill();
+      x.fillStyle = 'rgba(235, 235, 245, .55)';
+      x.font = '600 8px "IBM Plex Mono", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(labels[k % labels.length], a.x + a.w / 2, a.y + a.h / 2);
+      // surface-mount parts clustered around the chip
+      for (let s = 0; s < 9; s++) {
+        const side = s % 4, horiz = rnd() < .5;
+        const sw = horiz ? 8 : 4, sh = horiz ? 4 : 8;
+        let px, py;
+        if (side === 0) { px = R(a.x, a.x + a.w); py = a.y - R(14, 26); }
+        else if (side === 1) { px = R(a.x, a.x + a.w); py = a.y + a.h + R(10, 22); }
+        else if (side === 2) { px = a.x - R(16, 28); py = R(a.y, a.y + a.h); }
+        else { px = a.x + a.w + R(10, 22); py = R(a.y, a.y + a.h); }
+        x.fillStyle = rnd() < .5 ? 'rgba(150, 110, 70, .85)' : 'rgba(40, 36, 46, .85)';
+        x.fillRect(px, py, sw, sh);
+        x.fillStyle = 'rgba(210, 212, 220, .8)';
+        if (horiz) { x.fillRect(px, py, 2, sh); x.fillRect(px + sw - 2, py, 2, sh); }
+        else { x.fillRect(px, py, sw, 2); x.fillRect(px, py + sh - 2, sw, 2); }
+      }
+    }
+
+    // electrolytic capacitors seen from above
+    for (let k = 0; k < 5; k++) {
+      const r = R(8, 13), cx = R(m + 30, w - m - 30), cy = R(m + 30, h - m - 30);
+      x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
+      x.fillStyle = 'rgba(60, 50, 120, .85)'; x.fill();
+      x.beginPath(); x.arc(cx, cy, r * .72, 0, Math.PI * 2);
+      x.fillStyle = 'rgba(200, 205, 215, .8)'; x.fill();
+      x.strokeStyle = 'rgba(90, 90, 110, .8)'; x.lineWidth = 1;
+      x.beginPath(); x.moveTo(cx - r * .5, cy); x.lineTo(cx + r * .5, cy); x.moveTo(cx, cy - r * .5); x.lineTo(cx, cy + r * .5); x.stroke();
+    }
+
+    // crystal oscillator
+    { const ox = R(m + 40, w - m - 80), oy = R(m + 40, h - m - 40);
+      rr(ox, oy, 34, 13, 6.5); x.fillStyle = 'rgba(205, 210, 220, .8)'; x.fill(); }
+
+    // ribbon cable running down the middle
+    { const rx = w * R(.18, .3), rw = 46;
+      x.fillStyle = 'rgba(225, 150, 40, .32)'; x.fillRect(rx, h * .3, rw, h * .4);
+      x.strokeStyle = 'rgba(160, 100, 30, .35)'; x.lineWidth = 1;
+      for (let i = 4; i < rw; i += 4) { x.beginPath(); x.moveTo(rx + i, h * .3); x.lineTo(rx + i, h * .7); x.stroke(); } }
+
+    // speaker grille, lower right
+    { const sx = w - m - 110, sy = h * .58, sr = 70;
+      x.beginPath(); x.arc(sx, sy, sr + 6, 0, Math.PI * 2);
+      x.strokeStyle = 'rgba(60, 40, 90, .35)'; x.lineWidth = 3; x.stroke();
+      x.fillStyle = 'rgba(30, 18, 50, .55)';
+      for (let gy = -sr; gy <= sr; gy += 11) for (let gx = -sr; gx <= sr; gx += 11) {
+        const ox = gx + ((gy / 11) % 2 ? 5.5 : 0);
+        if (ox * ox + gy * gy > (sr - 4) * (sr - 4)) continue;
+        x.beginPath(); x.arc(sx + ox, sy + gy, 3, 0, Math.PI * 2); x.fill();
+      } }
+
+    // molded screw posts
+    for (const [px, py] of [[w * .5, m + 40], [w * .5, h - m - 40], [m + 40, h * .5], [w - m - 40, h * .5]]) {
+      x.beginPath(); x.arc(px, py, 12, 0, Math.PI * 2);
+      x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 3; x.stroke();
+      x.beginPath(); x.arc(px, py, 4, 0, Math.PI * 2);
+      x.fillStyle = 'rgba(40, 30, 60, .5)'; x.fill();
+    }
+
+    // tint everything as if seen through purple plastic
+    x.globalCompositeOperation = 'source-atop';
+    x.fillStyle = 'rgba(100, 75, 200, .42)';
+    x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-over';
+  }
+  let t;
+  const later = () => { clearTimeout(t); t = setTimeout(draw, 80); };
+  if (window.ResizeObserver) new ResizeObserver(later).observe(dev); else window.addEventListener('resize', later);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  draw();
+})();
+</script>
+</body>
+</html>
