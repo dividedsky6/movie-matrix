@@ -386,7 +386,136 @@ code { color: #FFE08A; }
   color: #1A0E46; background: linear-gradient(180deg, #fff, #CFC2FF); border: 2px solid #1A0E46;
   border-radius: 999px; padding: 3px 12px 2px; text-shadow: none; transform: skewX(-9deg); white-space: nowrap;
 }
+/* Today's Showings */
+.showings {
+  margin-top: 22px; padding: clamp(14px, 2.4vw, 22px); border-radius: 24px; position: relative;
+  background: rgba(255,255,255,.045); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), inset 0 0 30px rgba(120, 80, 230, .12);
+}
+.marquee-lights {
+  height: 8px; margin: -4px 6px 12px; border-radius: 4px;
+  background: radial-gradient(circle, #fff3c4 0 2.2px, rgba(255, 210, 120, .35) 3px, transparent 4px) 0 50% / 16px 8px repeat-x;
+  filter: drop-shadow(0 0 4px rgba(255, 210, 120, .8));
+  animation: chase 1.2s steps(2) infinite;
+}
+@keyframes chase { to { background-position: 16px 50%; } }
+.showings-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 14px; }
+.showings-head h2 {
+  margin: 0; font-family: "Stereofunk", "Unbounded", sans-serif; font-weight: 400; font-size: clamp(20px, 3vw, 28px);
+  color: #fff; letter-spacing: .01em; transform: skewX(-9deg);
+  text-shadow: 0 0 2px #fff, 0 0 12px rgba(190, 160, 255, .9), 0 2px 0 #3a2390;
+}
+.showings-meta { font-family: var(--pixel); font-size: 20px; color: #C9B6FF; font-variant-numeric: tabular-nums; }
+.showings-share { margin-left: auto; padding: 6px 16px; font-size: 12.5px; font-weight: 700; border-color: rgba(var(--ice), .95) !important; box-shadow: 0 0 12px rgba(var(--ice), .45) !important; }
+.showings-share:disabled { opacity: .4; cursor: default; box-shadow: none !important; }
+.showings-clear { padding: 6px 14px; font-size: 12.5px; }
+.share-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.78); backdrop-filter: blur(6px); }
+.share-modal[hidden] { display: none; }
+.share-box {
+  width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; display: grid; gap: 14px;
+  padding: 18px; border-radius: 24px; background: rgba(28, 18, 56, .96); border: 1.5px solid rgba(255,255,255,.4);
+  box-shadow: 0 0 40px rgba(130, 80, 240, .45);
+}
+.share-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; position: relative; }
+.share-top h3 { margin: 0; font-family: "Stereofunk", "Unbounded", sans-serif; font-weight: 400; font-size: 22px; color: #fff; text-shadow: 0 0 10px rgba(190,160,255,.8); }
+.share-top .show-rm { position: static; flex: none; }
+.share-preview { display: grid; place-items: center; background: rgba(0,0,0,.4); border-radius: 14px; padding: 10px; min-height: 200px; }
+.share-preview img { display: block; max-width: 100%; max-height: 56vh; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.6); }
+.share-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.share-actions .btn { flex: 1 1 140px; text-align: center; text-decoration: none; padding: 11px 16px; font-weight: 700; }
+.share-go { border-color: rgba(var(--ice), .95) !important; }
+.share-note { margin: 0; font-size: 12px; color: #C6CFDA; }
+body.modal-open { overflow: hidden; }
+.showings-clear:disabled { opacity: .4; cursor: default; }
+.lineup { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.show-card {
+  position: relative; display: grid; grid-template-columns: auto 58px minmax(0, 1fr); gap: 10px; align-items: center;
+  min-height: 104px; padding: 10px 34px 10px 10px; border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(140, 110, 255, .12));
+  border: 1.5px solid rgba(255,255,255,.45); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 0 16px rgba(140, 110, 255, .25);
+}
+.show-card.open { grid-template-columns: auto minmax(0, 1fr); background: rgba(255,255,255,.03); border: 1.5px dashed rgba(255,255,255,.25); box-shadow: none; }
+.show-no {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: #D2CBEC; color: #24164F; font-family: var(--pixel); font-size: 18px;
+}
+.show-card.open .show-no { background: rgba(255,255,255,.1); color: #9AA6B4; }
+.show-empty { font-size: 12px; color: #9AA6B4; font-style: italic; }
+.show-thumb { display: block; width: 58px; aspect-ratio: 2 / 3; border-radius: 5px; overflow: hidden; background: rgba(0,0,0,.4); box-shadow: 0 0 0 1px rgba(255,255,255,.4); position: relative; }
+.show-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.show-thumb-txt { position: absolute; inset: 0; display: grid; place-items: center; padding: 4px; text-align: center; font-size: 8px; color: #ddd; }
+.show-txt { display: grid; gap: 2px; min-width: 0; }
+.show-title { font-family: var(--pixel); font-size: 18px; line-height: 1.05; color: #fff; overflow-wrap: break-word; }
+.show-meta { font-size: 10.5px; color: #C6CFDA; }
+.show-stream { font-size: 10.5px; color: rgb(var(--ice)); }
+.show-stream.dim { color: #9AA6B4; font-style: italic; }
+.show-rm {
+  position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.4); background: rgba(0,0,0,.35); color: #fff; font-size: 16px; line-height: 1;
+}
+.show-rm:hover { background: rgba(255, 90, 120, .5); }
+.showbtn {
+  margin: 8px 0 0; width: 100%; cursor: pointer; padding: 7px 8px; border-radius: 10px;
+  font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .01em;
+  color: #F2F6FA; background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.05));
+  border: 1.5px dashed rgba(255,255,255,.5);
+}
+.showbtn:hover { background: rgba(255,255,255,.18); }
+.showbtn[aria-pressed="true"] {
+  border-style: solid; border-color: rgba(var(--ice), .95); color: #fff;
+  background: linear-gradient(180deg, rgba(190, 160, 255, .75), rgba(110, 70, 220, .65));
+  box-shadow: 0 0 12px rgba(var(--ice), .5);
+}
+.showbtn.full { opacity: .5; }
+.slot .showbtn + .info { margin-top: 8px; }
+/* Total Mystery */
+.mystery-row { display: grid; justify-items: center; gap: 8px; padding: 4px 0 14px; border-bottom: 1px dashed rgba(255,255,255,.18); }
+.mystery {
+  display: inline-flex; align-items: center; gap: 12px; cursor: pointer;
+  padding: 12px 28px 12px 14px; border-radius: 999px;
+  font-family: "Stereofunk", "Unbounded", sans-serif; font-size: 22px; letter-spacing: .02em; color: #fff;
+  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(150, 110, 255, .35) 55%, rgba(90, 50, 200, .55));
+  border: 2px solid rgba(255,255,255,.85);
+  box-shadow: inset 0 1px 0 #fff, 0 5px 0 rgba(60, 30, 140, .9), 0 0 26px rgba(170, 130, 255, .6);
+  text-shadow: 0 0 10px rgba(200, 180, 255, .9), 0 2px 0 #2A1870;
+  transition: transform .08s, box-shadow .08s, filter .15s;
+}
+.mystery:hover { filter: brightness(1.12); }
+.mystery:active { transform: translateY(4px); box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgba(60, 30, 140, .9), 0 0 18px rgba(170, 130, 255, .6); }
+.mystery:disabled { filter: grayscale(.4); cursor: default; }
+.mystery .q {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: #D2CBEC; color: #24164F; font-family: var(--pixel); font-size: 32px; line-height: 1; text-shadow: none;
+  box-shadow: inset 0 -3px 0 rgba(36, 22, 79, .25);
+}
+.mystery-note { font-size: 11.5px; color: #9AA6B4; text-align: center; }
+.mystery-spin .cart { animation: jiggle .12s linear infinite; }
+.mystery-spin .empty { font-family: var(--pixel); font-size: 90px; color: rgba(var(--ice), .9); }
+@keyframes jiggle { 0% { transform: translateX(-2px) rotate(-1deg); } 50% { transform: translateX(2px) rotate(1deg); } 100% { transform: translateX(-2px) rotate(-1deg); } }
+.fresh-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.seen-note { font-size: 12px; color: #9AA6B4; flex: 1 1 220px; }
+.seen-clear { padding: 7px 14px; font-size: 12.5px; }
+.seen-clear:disabled { opacity: .45; cursor: default; }
+.seen-clear[hidden] { display: none; }
+/* TMDB rating */
+.rating { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 2px 6px; }
+.rating-num { font-family: var(--pixel); font-size: 22px; line-height: 1; color: #FFD27A; text-shadow: 0 0 8px rgba(255, 200, 90, .45); }
+.rating-note { font-size: 10px; color: #9AA6B4; }
+.rating-meter { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+.rating-meter span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #a07cff, #FFD27A); }
+.rating-none { grid-column: 1 / -1; font-size: 10.5px; font-style: italic; color: #9AA6B4; }
+.show-rating { font-size: 10.5px; color: #FFD27A; }
+#ratings .chip[aria-pressed="true"] { background: linear-gradient(180deg, rgba(255, 220, 140, .9), rgba(220, 160, 40, .8)); border-color: #FFE6A8; color: #2A1A00; box-shadow: 0 0 12px rgba(255, 200, 90, .55); }
+/* reset filters */
+.reset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,.18); }
+.reset-filters { padding: 9px 18px; font-weight: 600; }
+.reset-filters:disabled { opacity: .45; cursor: default; transform: none; }
+.reset-note { font-size: 12px; color: #9AA6B4; }
 /* match details + fix */
+.missing { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.missing li { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.16); border-radius: 10px; padding: 8px 10px; display: grid; gap: 6px; }
+.missing .mtop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; align-items: baseline; }
+.missing .mname { font-size: 12.5px; color: #ECE8F7; }
+.missing .fixbtn { color: rgb(var(--ice)); }
 .matched { font-size: 10.5px; font-style: italic; color: #FFD27A; }
 .fix { display: grid; gap: 6px; min-width: 0; }
 .slot { grid-template-columns: minmax(0, 1fr); }
@@ -449,6 +578,8 @@ code { color: #FFE08A; }
   .readout { font-size: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .mystery-spin .cart { animation: none; }
+  .marquee-lights { animation: none; }
   .sparkles i { animation: none; opacity: .8; }
   .cart, .lcd, .progress div, .key, .chip, .btn, .pick { transition: none; }
   .led { animation: none; }
@@ -475,8 +606,23 @@ code { color: #FFE08A; }
     <div class="windows" id="windows"></div>
   </section>
 
+  <section class="showings" aria-labelledby="showings-title">
+    <div class="marquee-lights" aria-hidden="true"></div>
+    <div class="showings-head">
+      <h2 id="showings-title">Today's Showings</h2>
+      <span class="showings-meta" id="showings-meta" aria-live="polite"></span>
+      <button type="button" class="btn showings-share" id="showings-share">Share lineup</button>
+      <button type="button" class="btn showings-clear" id="showings-clear">Clear lineup</button>
+    </div>
+    <ol class="lineup" id="lineup"></ol>
+  </section>
+
   <section class="deck" aria-label="Controls">
     <div class="panel">
+      <div class="mystery-row">
+        <button type="button" class="mystery" id="mystery" title="One film from your whole watchlist (shortcut: M)"><span class="q" aria-hidden="true">?</span>Total Mystery</button>
+        <span class="mystery-note" id="mystery-note">1 film from your whole watchlist, ignoring every filter</span>
+      </div>
       <div class="row">
         <div>
           <span class="label" id="count-label">How many</span>
@@ -492,6 +638,10 @@ code { color: #FFE08A; }
         </div>
       </div>
       <div>
+        <span class="label" id="rating-label">TMDB rating <em>(out of 10; needs at least 10 votes)</em></span>
+        <div class="chips" role="group" aria-labelledby="rating-label" id="ratings"></div>
+      </div>
+      <div>
         <span class="label" id="decade-label">Decade <em>(pick any)</em></span>
         <div class="chips" role="group" aria-labelledby="decade-label" id="decades"></div>
       </div>
@@ -500,6 +650,15 @@ code { color: #FFE08A; }
         <div class="chips" role="group" aria-labelledby="genre-label" id="genres">
           <p class="empty-note">Genres appear once film details have loaded.</p>
         </div>
+      </div>
+      <div class="reset-row">
+        <button type="button" class="btn reset-filters" id="reset-filters">Reset filters</button>
+        <span class="reset-note" id="filter-note"></span>
+      </div>
+      <div class="fresh-row">
+        <button type="button" class="chip" id="norepeat" aria-pressed="true">No repeats</button>
+        <span class="seen-note" id="seen-note"></span>
+        <button type="button" class="btn seen-clear" id="seen-clear">Start fresh</button>
       </div>
     </div>
   </section>
@@ -528,6 +687,7 @@ code { color: #FFE08A; }
       <div class="step">
         <h3>3. Film details</h3>
         <p id="enrich-text">Once the key is in, each film is looked up on TMDB. This runs once and is remembered in this browser.</p>
+          <ul class="missing" id="missing" aria-label="Films not found on TMDB"></ul>
         <div class="progress" aria-hidden="true"><div id="bar"></div></div>
         <div class="field">
           <button type="button" class="btn" id="retry">Look up missing films</button>
@@ -537,6 +697,24 @@ code { color: #FFE08A; }
     </div>
   </details>
 </main>
+<div class="share-modal" id="share-modal" hidden role="dialog" aria-modal="true" aria-labelledby="share-title">
+  <div class="share-box">
+    <div class="share-top">
+      <h3 id="share-title">Share Today's Showings</h3>
+      <button type="button" class="show-rm" id="share-close" aria-label="Close">×</button>
+    </div>
+    <div class="chips" id="share-fmt" role="group" aria-label="Image size">
+      <button type="button" class="chip" data-fmt="post" aria-pressed="true">Post · 4:5</button>
+      <button type="button" class="chip" data-fmt="story" aria-pressed="false">Story · 9:16</button>
+    </div>
+    <div class="share-preview"><img id="share-img" alt="Preview of your Today's Showings image"></div>
+    <div class="share-actions">
+      <button type="button" class="btn share-go" id="share-go" hidden>Share…</button>
+      <a class="btn" id="share-save" download="todays-showings.png" href="#">Save image</a>
+    </div>
+    <p class="share-note" id="share-note"></p>
+  </div>
+</div>
 <div class="pick-wrap">
       <button type="button" class="pick" id="ring" title="Pick films (shortcut: P)">PICK</button>
       <span class="status" id="status" role="status"></span>
@@ -1468,8 +1646,12 @@ Date,Name,Year,Letterboxd URI
     meta: store.get('meta', {}),         // uri -> {poster, runtime, genres} | {miss:true}
     count: store.get('count', 3),
     length: store.get('length', 'any'),
+    minRating: store.get('minRating', 0),
     genres: new Set(store.get('genres', [])),
     decades: new Set(store.get('decades', [])),
+    lineup: store.get('lineup', []),
+    noRepeat: store.get('noRepeat', true),
+    seen: new Set(store.get('seen', [])),
     picks: [],
     busy: false,
   };
@@ -1596,7 +1778,8 @@ Date,Name,Year,Letterboxd URI
     return { v: META_V, id: d.id, tv, poster: d.poster_path || null, runtime: tv ? null : (d.runtime || null),
       genres: (d.genres || []).map(g => g.name), overview: d.overview || '',
       providers: parseProviders(d['watch/providers']), pAt: Date.now(),
-      mTitle: tv ? d.name : d.title, mYear: date ? +date.slice(0, 4) : null };
+      mTitle: tv ? d.name : d.title, mYear: date ? +date.slice(0, 4) : null,
+      rating: d.vote_average ? Math.round(d.vote_average * 10) / 10 : null, votes: d.vote_count || 0 };
   }
   async function lookup(film) {
     const seen = new Map(); let best = null;
@@ -1634,7 +1817,7 @@ Date,Name,Year,Letterboxd URI
   }
   async function enrichAll() {
     if (state.busy || !state.key || !state.films.length) return;
-    const todo = state.films.filter(f => { const m = state.meta[f.uri]; return !m || (m.v !== META_V && !m.manual); });
+    const todo = state.films.filter(f => { const m = state.meta[f.uri]; return !m || (m.v !== META_V && !m.manual) || (m.id && m.votes === undefined); });
     if (!todo.length) { updateEnrichText(); if (!state.picks.length) ring(); return; }
     state.busy = true;
     const total = todo.length; let done = 0, authFail = false, netFail = 0, ok = 0, lastErr = '';
@@ -1648,7 +1831,16 @@ Date,Name,Year,Letterboxd URI
     const worker = async () => {
       while (queue.length && !authFail && !(netFail >= 12 && ok === 0)) {
         const f = queue.shift();
-        try { state.meta[f.uri] = await lookup(f); ok++; }
+        try {
+          const old = state.meta[f.uri];
+          if (old && old.id && old.votes === undefined && (old.v === META_V || old.manual)) {
+            // already matched: just fetch the details again to add the rating
+            const d = await details(old.tv ? 'tv' : 'movie', old.id);
+            if (old.manual) d.manual = true;
+            state.meta[f.uri] = d;
+          } else state.meta[f.uri] = await lookup(f);
+          ok++;
+        }
         catch (e) { if (e.message === 'auth') { authFail = true; break; } netFail++; lastErr = e.message || String(e); }
         done++; tick();
         if (done % 15 === 0) { store.set('meta', state.meta); refreshFilters(); }
@@ -1676,7 +1868,23 @@ Date,Name,Year,Letterboxd URI
     $('bar').style.width = (found + missed) / n * 100 + '%';
     $('enrich-text').textContent = !state.key
       ? 'Add a TMDB key to fetch posters, genres and runtimes.'
-      : `${found} of ${n} films have details.` + (missed ? ` ${missed} couldn't be matched; they still appear when no genre or length is chosen.` : '');
+      : `${found} of ${n} films have details.` + (missed ? ` ${missed} couldn't be found on TMDB. Fix them below; until then they still turn up when no genre, length or rating filter is on.` : '');
+    renderMissing();
+  }
+  function renderMissing() {
+    const box = $('missing'); if (!box) return;
+    box.textContent = '';
+    if (state.busy) return;
+    for (const f of state.films) {
+      const m = state.meta[f.uri];
+      if (!m || !m.miss) continue;
+      const li = el('li');
+      const name = el('span', 'mname', f.name + (f.year ? ' (' + f.year + ')' : ' (no year on Letterboxd)'));
+      const lb = el('a', 'where', 'Letterboxd ↗'); lb.href = f.uri; lb.target = '_blank'; lb.rel = 'noopener';
+      const top = el('div', 'mtop'); top.append(name, lb);
+      li.append(top, buildFix(f, 'Find & fix'));
+      box.appendChild(li);
+    }
   }
 
   /* ---------- Filters ---------- */
@@ -1697,7 +1905,24 @@ Date,Name,Year,Letterboxd URI
     const d = decadeOf(f);
     return d !== null && state.decades.has(d);
   }
-  const pool = () => state.films.filter(f => lengthOk(f) && genreOk(f) && decadeOk(f));
+  const MIN_VOTES = 10;
+  function ratingOk(f) {
+    if (!state.minRating) return true;
+    const m = state.meta[f.uri];
+    return !!m && !m.miss && m.rating != null && (m.votes || 0) >= MIN_VOTES && m.rating >= state.minRating;
+  }
+  const pool = () => state.films.filter(f => lengthOk(f) && genreOk(f) && decadeOk(f) && ratingOk(f));
+  const RATINGS = [0, 6, 7, 7.5, 8];
+  function renderRatings() {
+    const box = $('ratings'); box.textContent = '';
+    for (const r of RATINGS) {
+      const b = el('button', 'chip', r ? '★ ' + r + '+' : 'Any rating');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(state.minRating === r));
+      b.onclick = () => { state.minRating = r; store.set('minRating', r); renderRatings(); updateRegister(); };
+      box.appendChild(b);
+    }
+  }
   function renderDecades() {
     const counts = {};
     for (const f of state.films) { const d = decadeOf(f); if (d !== null) counts[d] = (counts[d] || 0) + 1; }
@@ -1756,13 +1981,30 @@ Date,Name,Year,Letterboxd URI
       box.appendChild(b);
     }
   }
+  function activeFilters() {
+    return (state.length !== 'any' ? 1 : 0) + (state.minRating ? 1 : 0) + state.genres.size + state.decades.size;
+  }
+  function updateResetButton() {
+    const k = activeFilters(), btn = $('reset-filters');
+    if (!btn) return;
+    btn.disabled = k === 0;
+    btn.textContent = k ? `Reset filters (${k})` : 'Reset filters';
+    $('filter-note').textContent = k ? '' : 'No filters on: picking from your whole watchlist.';
+  }
+  function resetFilters() {
+    state.length = 'any'; state.minRating = 0; state.genres.clear(); state.decades.clear();
+    store.set('length', 'any'); store.set('minRating', 0); store.set('genres', []); store.set('decades', []);
+    renderLengths(); renderRatings(); renderGenres(); renderDecades(); updateRegister();
+    setStatus('Filters cleared.');
+  }
   function updateRegister() {
+    updateResetButton();
     const n = state.films.length;
     if (!n) { $('register').textContent = 'NO DISC'; return; }
     const p = pool().length;
     $('register').textContent = `${n} FILMS · ${p} MATCH`;
   }
-  function refreshFilters() { renderGenres(); renderDecades(); updateRegister(); updateEnrichText(); }
+  function refreshFilters() { renderRatings(); renderGenres(); renderDecades(); updateRegister(); updateEnrichText(); renderLineup(); updateSeen(); }
 
   /* ---------- Cartridge slots ---------- */
   const CANDY = ['0,190,220', '140,110,255', '200,140,255', '255,190,40', '90,150,255'];
@@ -1809,8 +2051,76 @@ Date,Name,Year,Letterboxd URI
       lcd.appendChild(rr);
     }
     slot.appendChild(lcd);
-    if (film) slot.appendChild(buildInfo(film));
+    if (film) {
+      const sb = el('button', 'showbtn');
+      sb.type = 'button';
+      sb.dataset.uri = film.uri;
+      sb.onclick = () => toggleShowing(film);
+      paintShowBtn(sb);
+      slot.appendChild(sb);
+      slot.appendChild(buildInfo(film));
+    }
     return slot;
+  }
+
+  /* ---------- Today's Showings ---------- */
+  const MAX_SHOWINGS = 4;
+  const filmByUri = uri => state.films.find(f => f.uri === uri);
+  function saveLineup() { store.set('lineup', state.lineup); }
+  function paintShowBtn(b) {
+    const inIt = state.lineup.includes(b.dataset.uri);
+    const n = state.lineup.indexOf(b.dataset.uri) + 1;
+    b.setAttribute('aria-pressed', String(inIt));
+    b.textContent = inIt ? `✓ Showing #${n} today` : "+ Add to Today's Showings";
+    b.classList.toggle('full', !inIt && state.lineup.length >= MAX_SHOWINGS);
+  }
+  function syncShowButtons() { document.querySelectorAll('.showbtn').forEach(paintShowBtn); }
+  function toggleShowing(film) {
+    const i = state.lineup.indexOf(film.uri);
+    if (i >= 0) state.lineup.splice(i, 1);
+    else if (state.lineup.length >= MAX_SHOWINGS) { setStatus("Today's Showings is full (4 films). Remove one to add another.", true); return; }
+    else state.lineup.push(film.uri);
+    saveLineup(); renderLineup(); syncShowButtons(); setStatus('');
+  }
+  function fmtRuntime(min) { const hh = Math.floor(min / 60), mm = min % 60; return (hh ? hh + 'h ' : '') + mm + 'm'; }
+  function renderLineup() {
+    state.lineup = state.lineup.filter(u => filmByUri(u));
+    const box = $('lineup'); if (!box) return;
+    box.textContent = '';
+    let total = 0, unknown = 0;
+    for (let i = 0; i < MAX_SHOWINGS; i++) {
+      const f = filmByUri(state.lineup[i] || '');
+      const li = el('li', 'show-card' + (f ? '' : ' open'));
+      li.appendChild(el('span', 'show-no', String(i + 1)));
+      if (!f) {
+        li.appendChild(el('span', 'show-empty', i === 0 && !state.lineup.length ? "Tap \"+ Add to Today's Showings\" on a pick" : 'Open slot'));
+        box.appendChild(li); continue;
+      }
+      const m = state.meta[f.uri];
+      if (m && m.runtime) total += m.runtime; else unknown++;
+      const thumb = el('a', 'show-thumb'); thumb.href = f.uri; thumb.target = '_blank'; thumb.rel = 'noopener';
+      thumb.setAttribute('aria-label', f.name + ' on Letterboxd');
+      if (m && m.poster) { const img = new Image(); img.alt = ''; img.src = IMG + m.poster; img.onerror = () => img.remove(); thumb.appendChild(img); }
+      else thumb.appendChild(el('span', 'show-thumb-txt', f.name));
+      const txt = el('div', 'show-txt');
+      txt.appendChild(el('span', 'show-title', f.name));
+      txt.appendChild(el('span', 'show-meta', metaLine(f)));
+      if (m && m.rating != null && (m.votes || 0) >= MIN_VOTES) txt.appendChild(el('span', 'show-rating', '★ ' + m.rating.toFixed(1) + ' on TMDB'));
+      const p = m && m.providers;
+      if (p && p.stream && p.stream.length) txt.appendChild(el('span', 'show-stream', 'On ' + p.stream.slice(0, 2).map(s => s.name).join(', ')));
+      else if (p) txt.appendChild(el('span', 'show-stream dim', p.rentbuy ? 'Rent or buy' : 'Not streaming'));
+      const rm = el('button', 'show-rm', '×'); rm.type = 'button';
+      rm.title = 'Remove from Today\'s Showings'; rm.setAttribute('aria-label', 'Remove ' + f.name + " from Today's Showings");
+      rm.onclick = () => toggleShowing(f);
+      li.append(thumb, txt, rm);
+      box.appendChild(li);
+    }
+    const n = state.lineup.length;
+    $('showings-meta').textContent = n
+      ? `${n} of ${MAX_SHOWINGS}` + (total ? ` · ${fmtRuntime(total)}${unknown ? '+' : ''} total` : '')
+      : `0 of ${MAX_SHOWINGS}`;
+    $('showings-clear').disabled = !n;
+    $('showings-share').disabled = !n;
   }
   function shortBlurb(text) {
     if (!text) return '';
@@ -1819,6 +2129,21 @@ Date,Name,Year,Letterboxd URI
     if (s.length > 190) s = s.slice(0, 180).replace(/\s+\S*$/, '') + '…';
     return s;
   }
+  function fmtVotes(n) { return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n); }
+  function ratingRow(m) {
+    const row = el('div', 'rating');
+    if (m.rating == null || (m.votes || 0) < MIN_VOTES) {
+      row.appendChild(el('span', 'rating-none', 'Not enough TMDB ratings yet'));
+      return row;
+    }
+    const meter = el('span', 'rating-meter'); meter.setAttribute('aria-hidden', 'true');
+    const fill = el('span'); fill.style.width = (m.rating * 10) + '%'; meter.appendChild(fill);
+    const num = el('span', 'rating-num', '★ ' + m.rating.toFixed(1));
+    const note = el('span', 'rating-note', '/10 · ' + fmtVotes(m.votes) + ' votes on TMDB');
+    row.title = `TMDB audience rating: ${m.rating.toFixed(1)} out of 10 from ${m.votes.toLocaleString()} votes`;
+    row.append(num, note, meter);
+    return row;
+  }
   function buildInfo(film) {
     const m = state.meta[film.uri];
     const info = el('div', 'info');
@@ -1826,6 +2151,7 @@ Date,Name,Year,Letterboxd URI
     if (m && m.overview) { blurb.textContent = shortBlurb(m.overview); blurb.title = m.overview; }
     else { blurb.textContent = m && !m.miss ? 'No description on TMDB.' : 'No details found for this one.'; blurb.classList.add('dim'); }
     info.appendChild(blurb);
+    if (m && !m.miss && m.votes !== undefined) info.appendChild(ratingRow(m));
     const st = el('div', 'stream');
     const head = el('span', 'stream-head', 'Streaming · ' + REGION);
     st.appendChild(head);
@@ -1852,9 +2178,9 @@ Date,Name,Year,Letterboxd URI
     info.appendChild(buildFix(film));
     return info;
   }
-  function buildFix(film) {
+  function buildFix(film, label) {
     const wrap = el('div', 'fix');
-    const btn = el('button', 'fixbtn', state.meta[film.uri] && state.meta[film.uri].manual ? 'Fixed by you · change' : 'Wrong film? Fix it');
+    const btn = el('button', 'fixbtn', label || (state.meta[film.uri] && state.meta[film.uri].manual ? 'Fixed by you · change' : 'Wrong film? Fix it'));
     btn.type = 'button';
     const form = el('form', 'fixform'); form.hidden = true;
     const inp = el('input'); inp.type = 'text'; inp.placeholder = 'Paste TMDB link'; inp.autocomplete = 'off';
@@ -1917,7 +2243,55 @@ Date,Name,Year,Letterboxd URI
   }
 
   /* ---------- Picking ---------- */
-  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  // Unbiased random whole number in [0, n), from the browser's cryptographic generator.
+  function randInt(n) {
+    if (n <= 1) return 0;
+    const c = window.crypto || window.msCrypto;
+    if (!c || !c.getRandomValues) return Math.floor(Math.random() * n);
+    const limit = Math.floor(0x100000000 / n) * n, buf = new Uint32Array(1);
+    let v; do { c.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+    return v % n;
+  }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function saveSeen() { store.set('seen', [...state.seen]); updateSeen(); }
+  function updateSeen() {
+    const total = state.films.length;
+    const n = state.films.reduce((s, f) => s + (state.seen.has(f.uri) ? 1 : 0), 0);
+    $('norepeat').setAttribute('aria-pressed', String(state.noRepeat));
+    $('norepeat').textContent = state.noRepeat ? 'No repeats: on' : 'No repeats: off';
+    $('seen-note').textContent = state.noRepeat
+      ? `Shown ${n} of ${total} so far. Nothing repeats until you've seen them all.`
+      : 'Every pick is a fresh, independent draw, so repeats can happen.';
+    $('seen-clear').hidden = !state.noRepeat;
+    $('seen-clear').disabled = !n;
+    $('mystery-note').textContent = `Any 1 of all ${total || 'your'} films, every time. Ignores filters and No repeats.`;
+  }
+  // Draw k films from a pool. With No repeats on, it works like a shuffled deck:
+  // films already shown are set aside until every film in the pool has come up once.
+  let cycled = false;
+  function draw(poolList, k, exclude) {
+    exclude = exclude || new Set();
+    const candidates = poolList.filter(f => !exclude.has(f.uri));
+    if (!state.noRepeat) return shuffle(candidates.slice()).slice(0, k);
+    const fresh = candidates.filter(f => !state.seen.has(f.uri));
+    let out;
+    if (fresh.length >= k) out = shuffle(fresh).slice(0, k);
+    else {
+      out = shuffle(fresh);
+      for (const f of poolList) state.seen.delete(f.uri);
+      const chosen = new Set(out.map(f => f.uri));
+      out = out.concat(shuffle(candidates.filter(f => !chosen.has(f.uri))).slice(0, k - out.length));
+      cycled = true;
+    }
+    out.forEach(f => state.seen.add(f.uri));
+    saveSeen();
+    return out;
+  }
+  function cycleNote() {
+    if (!cycled) return '';
+    cycled = false;
+    return "You've now seen every film in this mix, so it has been reshuffled from the top. ";
+  }
   function setStatus(msg, warn) { $('status').textContent = msg; $('status').classList.toggle('warn', !!warn); }
 
   async function ring() {
@@ -1930,26 +2304,52 @@ Date,Name,Year,Letterboxd URI
     if (!p.length) { setStatus('No films match those filters. Try another genre or length.', true); return; }
     $('ring').disabled = true;
     await closeShutters();
-    state.picks = shuffle(p.slice()).slice(0, state.count);
-    setStatus(state.picks.length < state.count
+    state.mysteryMode = false;
+    state.picks = draw(p, state.count);
+    setStatus(cycleNote() + (state.picks.length < state.count
       ? `Only ${state.picks.length} film${state.picks.length === 1 ? '' : 's'} match, so only ${state.picks.length === 1 ? 'that one is' : 'those are'} shown.`
-      : '');
+      : ''));
     renderWindows(true);
     $('ring').disabled = false;
     freshenStreaming();
   }
   async function swapRoom(i) {
     const taken = new Set(state.picks.map(f => f.uri));
-    const options = pool().filter(f => !taken.has(f.uri));
-    if (!options.length) { setStatus('No other matching films left to swap in.', true); return; }
+    const src = state.mysteryMode ? state.films : pool();
+    if (!src.some(f => !taken.has(f.uri))) { setStatus('No other matching films left to swap in.', true); return; }
     const slot = $('windows').children[i];
     if (!reduced) { slot.classList.add('out'); await sleep(360); }
-    state.picks[i] = options[Math.floor(Math.random() * options.length)];
+    if (state.mysteryMode) { const opts = state.films.filter(f => !taken.has(f.uri)); state.picks[i] = opts[randInt(opts.length)]; }
+    else state.picks[i] = draw(src, 1, taken)[0];
     const fresh = buildRoom(i, state.picks.length, state.picks[i], !reduced);
     slot.replaceWith(fresh);
     if (!reduced) { await sleep(40); fresh.classList.remove('out'); }
     freshenStreaming();
-    setStatus('');
+    setStatus(cycleNote());
+  }
+  async function mystery() {
+    if (!state.films.length) { ring(); return; }
+    const btn = $('mystery');
+    btn.disabled = true; $('ring').disabled = true;
+    await closeShutters();
+    state.mysteryMode = true;
+    // Pure draw: every one of your films has the same chance, every time. Ignores filters and No repeats.
+    const film = state.films[randInt(state.films.length)];
+    if (!reduced) {
+      // slot-machine shuffle on a single empty slot before the reveal
+      state.picks = [];
+      const box = $('windows');
+      box.style.setProperty('--cols', 1); box.textContent = '';
+      const s = buildRoom(0, 1, null, false); s.classList.add('mystery-spin'); box.appendChild(s);
+      const t = s.querySelector('.lcd .title'), e = s.querySelector('.empty');
+      if (e) e.textContent = '?';
+      for (let k = 0; k < 14; k++) { t.textContent = state.films[randInt(state.films.length)].name; await sleep(45 + k * 6); }
+    }
+    state.picks = [film];
+    renderWindows(true);
+    setStatus(`Total mystery: a 1-in-${state.films.length} draw from your whole watchlist.`);
+    btn.disabled = false; $('ring').disabled = false;
+    freshenStreaming();
   }
 
   /* ---------- Wiring ---------- */
@@ -1963,6 +2363,10 @@ Date,Name,Year,Letterboxd URI
   $('minus').onclick = () => { state.count = Math.max(1, state.count - 1); syncCount(); };
   $('plus').onclick = () => { state.count = Math.min(10, state.count + 1); syncCount(); };
   $('ring').onclick = ring;
+  $('mystery').onclick = mystery;
+  $('norepeat').onclick = () => { state.noRepeat = !state.noRepeat; store.set('noRepeat', state.noRepeat); updateSeen(); };
+  $('seen-clear').onclick = () => { state.seen.clear(); saveSeen(); setStatus('Starting fresh: every film is back in the draw.'); };
+  $('reset-filters').onclick = resetFilters;
 
   $('key').value = state.key;
   if (state.key) $('key-state').textContent = 'Key saved in this browser.';
@@ -2003,15 +2407,255 @@ Date,Name,Year,Letterboxd URI
   };
   $('reset').onclick = () => {
     store.clear();
-    Object.assign(state, { key: 'ffeacbacd83813f40718c9656fe70950', films: [], meta: {}, picks: [], length: 'any', genres: new Set(), decades: new Set() });
+    Object.assign(state, { key: 'ffeacbacd83813f40718c9656fe70950', films: [], meta: {}, picks: [], length: 'any', genres: new Set(), decades: new Set(), lineup: [], seen: new Set() });
     $('key').value = ''; $('key-state').textContent = ''; $('list-state').textContent = '';
     renderLengths(); refreshFilters(); renderWindows(false); setStatus('Everything cleared.');
   };
 
   document.addEventListener('keydown', e => {
+    if ((e.key === 'm' || e.key === 'M') && !e.metaKey && !e.ctrlKey && !e.altKey &&
+        !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '') && $('share-modal').hidden) { e.preventDefault(); mystery(); return; }
     if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey && !e.altKey &&
         !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); ring(); }
   });
+
+  /* ---------- Share card ---------- */
+  function rrect(x, px, py, w, h, r) {
+    x.beginPath();
+    x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r);
+    x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath();
+  }
+  function wrapText(x, text, px, py, maxW, lineH, maxLines) {
+    const words = String(text).split(/\s+/); const lines = []; let line = '';
+    for (const w of words) {
+      const t = line ? line + ' ' + w : w;
+      if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) {
+      lines.length = maxLines;
+      let last = lines[maxLines - 1];
+      while (x.measureText(last + '…').width > maxW && last.length) last = last.slice(0, -1);
+      lines[maxLines - 1] = last.replace(/\s+$/, '') + '…';
+    }
+    lines.forEach((l, i) => x.fillText(l, px, py + i * lineH));
+    return py + lines.length * lineH;
+  }
+  function loadImg(src) {
+    return new Promise(res => {
+      const i = new Image(); i.crossOrigin = 'anonymous';
+      i.onload = () => res(i); i.onerror = () => res(null); i.src = src;
+    });
+  }
+  function star(x, cx, cy, s) {
+    x.beginPath();
+    x.moveTo(cx, cy - s); x.lineTo(cx + s * .28, cy - s * .28); x.lineTo(cx + s, cy); x.lineTo(cx + s * .28, cy + s * .28);
+    x.lineTo(cx, cy + s); x.lineTo(cx - s * .28, cy + s * .28); x.lineTo(cx - s, cy); x.lineTo(cx - s * .28, cy - s * .28);
+    x.closePath(); x.fill();
+  }
+  function fitSize(x, text, size, maxW) {
+    x.save();
+    for (; size > 20; size -= 2) { x.font = `${size}px "Stereofunk", "Unbounded", sans-serif`; if (x.measureText(text).width + size * .4 <= maxW) break; }
+    x.restore();
+    return size;
+  }
+  function chromeText(x, text, cx, y, size, align) {
+    x.save();
+    x.font = `${size}px "Stereofunk", "Unbounded", sans-serif`;
+    x.textAlign = align || 'center'; x.textBaseline = 'alphabetic';
+    x.translate(cx, y); x.transform(1, 0, -0.16, 1, 0, 0);
+    x.lineJoin = 'round';
+    x.fillStyle = '#3A2390'; x.fillText(text, 0, size * .09);
+    x.strokeStyle = '#1A0E46'; x.lineWidth = size * .17; x.strokeText(text, 0, 0);
+    x.shadowColor = 'rgba(190,160,255,.85)'; x.shadowBlur = size * .35;
+    const g = x.createLinearGradient(0, -size * .75, 0, size * .05);
+    g.addColorStop(0, '#FFFFFF'); g.addColorStop(.3, '#EEF4FF'); g.addColorStop(.48, '#C9B8FF');
+    g.addColorStop(.52, '#8E73F0'); g.addColorStop(.7, '#D9CCFF'); g.addColorStop(1, '#FFFFFF');
+    x.fillStyle = g; x.fillText(text, 0, 0);
+    x.restore();
+  }
+  async function drawShareCard(fmt, withPosters) {
+    const W = 1080, H = fmt === 'story' ? 1920 : 1350;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    try { await Promise.all(['80px "Stereofunk"', '40px "VT323"', '24px "IBM Plex Mono"', '600 24px "IBM Plex Mono"'].map(f => document.fonts.load(f))); } catch {}
+    const films = state.lineup.map(filmByUri).filter(Boolean);
+    const posters = withPosters
+      ? await Promise.all(films.map(f => { const m = state.meta[f.uri]; return m && m.poster ? loadImg('https://image.tmdb.org/t/p/w500' + m.poster) : null; }))
+      : films.map(() => null);
+
+    // backdrop: black with purple light, faint grid, sparkles
+    x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+    for (const [gx, gy, r, col] of [[W * .5, -H * .05, W * .9, 'rgba(120,70,230,.45)'], [W * 1.05, H * .9, W * .8, 'rgba(110,60,220,.35)'], [-W * .1, H * .55, W * .6, 'rgba(80,40,180,.3)']]) {
+      const g = x.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+    }
+    x.strokeStyle = 'rgba(190,160,255,.07)'; x.lineWidth = 1;
+    for (let gx = 0; gx <= W; gx += 54) { x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); }
+    for (let gy = 0; gy <= H; gy += 54) { x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
+    x.save(); x.fillStyle = '#fff'; x.shadowColor = 'rgba(200,180,255,.95)'; x.shadowBlur = 18;
+    for (const [sx, sy, s] of [[70, 80, 22], [W - 80, 140, 16], [W - 60, H * .52, 26], [50, H * .7, 14], [W * .62, 40, 12], [W - 120, H - 70, 18], [110, H - 120, 12]]) star(x, sx, sy, s);
+    x.restore();
+
+    // clear plastic panel
+    const pad = 44;
+    rrect(x, pad, pad, W - pad * 2, H - pad * 2, 48);
+    const pg = x.createLinearGradient(0, pad, W, H - pad);
+    pg.addColorStop(0, 'rgba(230,215,255,.16)'); pg.addColorStop(.45, 'rgba(130,90,230,.07)'); pg.addColorStop(1, 'rgba(110,70,220,.14)');
+    x.fillStyle = pg; x.fill();
+    x.lineWidth = 3; x.strokeStyle = 'rgba(255,255,255,.55)'; x.stroke();
+    x.save(); rrect(x, pad, pad, W - pad * 2, 120, 48); x.clip();
+    const gl = x.createLinearGradient(0, pad, 0, pad + 120); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gl; x.fillRect(pad, pad, W - pad * 2, 120); x.restore();
+
+    // header
+    let y = pad + 70;
+    x.font = '28px "IBM Plex Mono", monospace'; x.fillStyle = '#C9B6FF'; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+    x.fillText('MOVIE MATRIX PRESENTS', W / 2, y);
+    const maxTitle = W - pad * 2 - 90;
+    if (fmt === 'story') {
+      const s = Math.min(fitSize(x, "Today's", 190, maxTitle), fitSize(x, 'Showings', 190, maxTitle));
+      y += s * .95; chromeText(x, "Today's", W / 2, y, s);
+      y += s * .92; chromeText(x, 'Showings', W / 2, y, s);
+      y += 74;
+    } else {
+      const s = fitSize(x, "Today's Showings", 120, maxTitle);
+      y += s + 20; chromeText(x, "Today's Showings", W / 2, y, s);
+      y += 66;
+    }
+    x.font = '46px "VT323", monospace'; x.fillStyle = '#ECE8F7';
+    x.fillText(new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase(), W / 2, y);
+    y += 34;
+    // marquee bulbs
+    x.save(); x.shadowColor = 'rgba(255,210,120,.95)'; x.shadowBlur = 10;
+    for (let bx = pad + 50; bx <= W - pad - 50; bx += 30) { x.fillStyle = (bx / 30) % 2 < 1 ? '#FFF3C4' : 'rgba(255,210,120,.55)'; x.beginPath(); x.arc(bx, y, 5, 0, Math.PI * 2); x.fill(); }
+    x.restore();
+    const top = y + 40;
+
+    // footer
+    const total = films.reduce((s, f) => s + ((state.meta[f.uri] || {}).runtime || 0), 0);
+    const unknown = films.some(f => !(state.meta[f.uri] || {}).runtime);
+    const footY = H - pad - 46;
+    x.font = '40px "VT323", monospace'; x.fillStyle = '#C9B6FF'; x.textAlign = 'center';
+    x.fillText(`${films.length} FILM${films.length === 1 ? '' : 'S'}` + (total ? ` · ${fmtRuntime(total)}${unknown ? '+' : ''} OF MOVIES` : ''), W / 2, footY - 40);
+    x.font = '24px "IBM Plex Mono", monospace'; x.fillStyle = '#9AA6B4';
+    x.fillText('picked from letterboxd.com/dividedsky', W / 2, footY);
+    const bottom = footY - 90;
+
+    // film cards
+    const n = films.length;
+    const drawPoster = (i, px, py, pw, ph) => {
+      const col = CANDY[i % CANDY.length];
+      x.save(); x.shadowColor = `rgba(${col},.75)`; x.shadowBlur = 34;
+      rrect(x, px, py, pw, ph, 14); x.fillStyle = `rgba(${col},.35)`; x.fill(); x.restore();
+      x.save(); rrect(x, px, py, pw, ph, 14); x.clip();
+      const img = posters[i];
+      if (img) x.drawImage(img, px, py, pw, ph);
+      else {
+        const g = x.createLinearGradient(px, py, px, py + ph); g.addColorStop(0, `rgba(${col},.7)`); g.addColorStop(1, 'rgba(20,10,50,.95)');
+        x.fillStyle = g; x.fillRect(px, py, pw, ph);
+        x.fillStyle = '#fff'; x.font = `${Math.round(pw * .14)}px "VT323", monospace`; x.textAlign = 'center';
+        wrapText(x, films[i].name.toUpperCase(), px + pw / 2, py + ph * .42, pw - 24, pw * .15, 4);
+      }
+      const sh = x.createLinearGradient(px, py, px + pw, py + ph);
+      sh.addColorStop(0, 'rgba(255,255,255,.28)'); sh.addColorStop(.35, 'rgba(255,255,255,0)');
+      x.fillStyle = sh; x.fillRect(px, py, pw, ph);
+      x.restore();
+      rrect(x, px, py, pw, ph, 14); x.lineWidth = 4; x.strokeStyle = 'rgba(255,255,255,.85)'; x.stroke();
+      // number badge
+      const bx = px - 12, by = py - 12;
+      x.beginPath(); x.arc(bx + 26, by + 26, 30, 0, Math.PI * 2); x.fillStyle = '#D2CBEC'; x.fill();
+      x.lineWidth = 4; x.strokeStyle = '#1A0E46'; x.stroke();
+      x.fillStyle = '#24164F'; x.font = '50px "VT323", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(String(i + 1), bx + 26, by + 28); x.textBaseline = 'alphabetic';
+    };
+    const filmText = (i, tx, ty, maxW, align, big) => {
+      const f = films[i], m = state.meta[f.uri] || {};
+      x.textAlign = align;
+      x.fillStyle = '#FFFFFF'; x.font = `${big ? 56 : 46}px "VT323", monospace`;
+      ty = wrapText(x, f.name, tx, ty, maxW, big ? 50 : 42, 2);
+      const bits = [f.year, m.runtime ? m.runtime + ' min' : null, m.rating != null && (m.votes || 0) >= MIN_VOTES ? 'TMDB ' + m.rating.toFixed(1) : null, (m.genres || []).slice(0, 1).join('') || null].filter(Boolean);
+      x.fillStyle = '#C6CFDA'; x.font = `${big ? 26 : 22}px "IBM Plex Mono", monospace`;
+      ty = wrapText(x, bits.join(' · '), tx, ty + 4, maxW, big ? 34 : 30, big ? 2 : 1);
+      const p = m.providers;
+      if (p) {
+        x.fillStyle = p.stream && p.stream.length ? 'rgb(190,160,255)' : '#8F99A8';
+        x.font = `600 ${big ? 24 : 21}px "IBM Plex Mono", monospace`;
+        wrapText(x, p.stream && p.stream.length ? '▶ ' + p.stream.slice(0, 2).map(s => s.name).join(', ') : (p.rentbuy ? 'Rent or buy' : 'Not streaming'), tx, ty + 6, maxW, big ? 32 : 28, big ? 2 : 1);
+      }
+    };
+    if (fmt === 'story') {
+      const rows = Math.max(n, 1), avail = bottom - top;
+      const rowH = Math.min(330, avail / rows), ph = rowH - 36, pw = ph * 2 / 3;
+      let ry = top + (avail - rowH * rows) / 2 + 10;
+      films.forEach((f, i) => {
+        const px = pad + 70;
+        drawPoster(i, px, ry, pw, ph);
+        filmText(i, px + pw + 44, ry + 58, W - pad * 2 - 70 - pw - 80, 'left', true);
+        ry += rowH;
+      });
+    } else {
+      const cols = n === 1 ? 1 : 2, rows = Math.ceil(n / cols), avail = bottom - top;
+      const cellW = (W - pad * 2 - 80 - (cols - 1) * 40) / cols;
+      const cellH = avail / Math.max(rows, 1);
+      const ph = Math.min(cellH - (n === 1 ? 240 : 225), n === 1 ? 600 : 400), pw = ph * 2 / 3;
+      films.forEach((f, i) => {
+        const r = Math.floor(i / cols), inRow = Math.min(cols, n - r * cols), ci = i % cols;
+        const rowW = inRow * cellW + (inRow - 1) * 40;
+        const cx = (W - rowW) / 2 + ci * (cellW + 40) + cellW / 2;
+        const cy = top + r * cellH;
+        drawPoster(i, cx - pw / 2, cy + 8, pw, ph);
+        filmText(i, cx, cy + ph + 60, cellW - 10, 'center', n === 1);
+      });
+    }
+    return c;
+  }
+  const share = { fmt: 'post', blob: null, url: null, token: 0 };
+  async function buildShare() {
+    const token = ++share.token;
+    $('share-note').textContent = 'Making your image…';
+    $('share-img').removeAttribute('src');
+    let c = await drawShareCard(share.fmt, true), blob = null;
+    try { blob = await new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('empty')), 'image/png'); } catch (e) { rej(e); } }); }
+    catch {
+      c = await drawShareCard(share.fmt, false);
+      blob = await new Promise(res => c.toBlob(res, 'image/png'));
+      $('share-note').textContent = "Posters couldn't be added to the image here, so titles are shown instead.";
+    }
+    if (token !== share.token) return;
+    if (share.url) URL.revokeObjectURL(share.url);
+    share.blob = blob; share.url = URL.createObjectURL(blob);
+    $('share-img').src = share.url;
+    $('share-save').href = share.url;
+    const file = new File([blob], 'todays-showings.png', { type: 'image/png' });
+    const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    $('share-go').hidden = !canShare;
+    if ($('share-note').textContent === 'Making your image…')
+      $('share-note').textContent = canShare ? 'Share straight to an app, or save it to your photos.' : 'Save the image, then post it from your photos. On a phone you can also press and hold the image to save it.';
+  }
+  async function openShare() {
+    if (!state.lineup.length) { setStatus("Add films to Today's Showings first.", true); return; }
+    $('share-modal').hidden = false;
+    document.body.classList.add('modal-open');
+    $('share-close').focus();
+    await buildShare();
+  }
+  function closeShare() { $('share-modal').hidden = true; document.body.classList.remove('modal-open'); $('showings-share').focus(); }
+  $('showings-share').onclick = openShare;
+  $('share-close').onclick = closeShare;
+  $('share-modal').addEventListener('click', e => { if (e.target === $('share-modal')) closeShare(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('share-modal').hidden) closeShare(); });
+  document.querySelectorAll('#share-fmt .chip').forEach(b => b.onclick = () => {
+    share.fmt = b.dataset.fmt;
+    document.querySelectorAll('#share-fmt .chip').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+    buildShare();
+  });
+  $('share-go').onclick = async () => {
+    try { await navigator.share({ files: [new File([share.blob], 'todays-showings.png', { type: 'image/png' })], title: "Today's Showings" }); }
+    catch (e) { if (e && e.name !== 'AbortError') $('share-note').textContent = "Sharing didn't work here. Use Save image instead."; }
+  };
+
+  $('showings-clear').onclick = () => { state.lineup = []; saveLineup(); renderLineup(); syncShowButtons(); };
 
   /* ---------- Start ---------- */
   renderLengths();
