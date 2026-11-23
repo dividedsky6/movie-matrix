@@ -453,6 +453,18 @@ body.modal-open { overflow: hidden; }
   border: 1px solid rgba(255,255,255,.4); background: rgba(0,0,0,.35); color: #fff; font-size: 16px; line-height: 1;
 }
 .show-rm:hover { background: rgba(255, 90, 120, .5); }
+.show-no.grip { border: 0; cursor: grab; touch-action: none; box-shadow: 0 0 0 2px rgba(255,255,255,.35); position: relative; }
+.show-no.grip::after { content: "⋮⋮"; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; font-size: 9px; letter-spacing: -1px; color: #9AA6B4; line-height: 1; }
+.show-no.grip:active { cursor: grabbing; }
+.show-card.dragging { z-index: 5; background: rgba(40, 26, 82, .97); box-shadow: 0 12px 30px rgba(0,0,0,.7), 0 0 24px rgba(var(--ice), .6); transition: none; }
+.show-card.drop-target { border-color: rgba(var(--ice), 1); box-shadow: 0 0 0 2px rgba(var(--ice), .9), 0 0 20px rgba(var(--ice), .5); }
+.show-card.just-moved { animation: settle .45s ease-out; }
+@keyframes settle { from { box-shadow: 0 0 0 3px rgba(var(--ice), .9), 0 0 26px rgba(var(--ice), .7); } }
+.show-move { display: flex; gap: 6px; margin-top: 4px; }
+.mv { width: 30px; height: 24px; border-radius: 8px; cursor: pointer; font-size: 17px; line-height: 1; color: #F2F6FA;
+  background: linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.06)); border: 1px solid rgba(255,255,255,.45); }
+.mv:hover { background: rgba(255,255,255,.22); }
+.mv:disabled { opacity: .3; cursor: default; }
 .showbtn {
   margin: 8px 0 0; width: 100%; cursor: pointer; padding: 7px 8px; border-radius: 10px;
   font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .01em;
@@ -578,6 +590,7 @@ body.modal-open { overflow: hidden; }
   .readout { font-size: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .show-card.just-moved { animation: none; }
   .mystery-spin .cart { animation: none; }
   .marquee-lights { animation: none; }
   .sparkles i { animation: none; opacity: .8; }
@@ -2082,6 +2095,52 @@ Date,Name,Year,Letterboxd URI
     else state.lineup.push(film.uri);
     saveLineup(); renderLineup(); syncShowButtons(); setStatus('');
   }
+  function moveShowing(from, to, keepFocus) {
+    if (to < 0 || to >= state.lineup.length || from === to) return;
+    const [u] = state.lineup.splice(from, 1);
+    state.lineup.splice(to, 0, u);
+    saveLineup(); renderLineup(); syncShowButtons();
+    const g = document.querySelector(`#lineup .grip[data-i="${to}"]`);
+    if (keepFocus && g) g.focus();
+    const card = g && g.closest('.show-card');
+    if (card && !reduced) { card.classList.add('just-moved'); setTimeout(() => card.classList.remove('just-moved'), 500); }
+  }
+  // Drag a showing by its number badge; works with mouse, pen and touch.
+  function startDrag(handle, li, from) {
+    let d = null;
+    handle.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      d = { x: e.clientX, y: e.clientY, moved: false, target: from };
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', e => {
+      if (!d) return;
+      const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (!d.moved && Math.hypot(dx, dy) < 6) return;
+      d.moved = true;
+      li.classList.add('dragging');
+      li.style.transform = `translate(${dx}px, ${dy}px)`;
+      const cards = [...$('lineup').children];
+      let t = from;
+      cards.forEach((c, k) => {
+        if (c === li) return;
+        const r = c.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) t = Math.min(k, state.lineup.length - 1);
+      });
+      d.target = t;
+      cards.forEach((c, k) => c.classList.toggle('drop-target', k === t && t !== from));
+    });
+    const end = () => {
+      if (!d) return;
+      const { moved, target } = d; d = null;
+      li.classList.remove('dragging'); li.style.transform = '';
+      [...$('lineup').children].forEach(c => c.classList.remove('drop-target'));
+      if (moved && target !== from) moveShowing(from, target);
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+    handle.addEventListener('click', e => { if (li.classList.contains('dragging')) e.preventDefault(); });
+  }
   function fmtRuntime(min) { const hh = Math.floor(min / 60), mm = min % 60; return (hh ? hh + 'h ' : '') + mm + 'm'; }
   function renderLineup() {
     state.lineup = state.lineup.filter(u => filmByUri(u));
@@ -2091,7 +2150,19 @@ Date,Name,Year,Letterboxd URI
     for (let i = 0; i < MAX_SHOWINGS; i++) {
       const f = filmByUri(state.lineup[i] || '');
       const li = el('li', 'show-card' + (f ? '' : ' open'));
-      li.appendChild(el('span', 'show-no', String(i + 1)));
+      if (f) {
+        const grip = el('button', 'show-no grip', String(i + 1));
+        grip.type = 'button';
+        grip.dataset.i = i;
+        grip.title = 'Drag to reorder (or use the arrow keys)';
+        grip.setAttribute('aria-label', `Showing ${i + 1}: ${f.name}. Drag, or press arrow keys, to move it`);
+        grip.addEventListener('keydown', e => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); moveShowing(i, i - 1, true); }
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); moveShowing(i, i + 1, true); }
+        });
+        startDrag(grip, li, i);
+        li.appendChild(grip);
+      } else li.appendChild(el('span', 'show-no', String(i + 1)));
       if (!f) {
         li.appendChild(el('span', 'show-empty', i === 0 && !state.lineup.length ? "Tap \"+ Add to Today's Showings\" on a pick" : 'Open slot'));
         box.appendChild(li); continue;
@@ -2112,6 +2183,15 @@ Date,Name,Year,Letterboxd URI
       const rm = el('button', 'show-rm', '×'); rm.type = 'button';
       rm.title = 'Remove from Today\'s Showings'; rm.setAttribute('aria-label', 'Remove ' + f.name + " from Today's Showings");
       rm.onclick = () => toggleShowing(f);
+      const mv = el('div', 'show-move');
+      const prev = el('button', 'mv', '‹'); prev.type = 'button'; prev.disabled = i === 0;
+      prev.title = 'Move earlier'; prev.setAttribute('aria-label', 'Move ' + f.name + ' earlier');
+      prev.onclick = () => moveShowing(i, i - 1);
+      const next = el('button', 'mv', '›'); next.type = 'button'; next.disabled = i === state.lineup.length - 1;
+      next.title = 'Move later'; next.setAttribute('aria-label', 'Move ' + f.name + ' later');
+      next.onclick = () => moveShowing(i, i + 1);
+      mv.append(prev, next);
+      txt.appendChild(mv);
       li.append(thumb, txt, rm);
       box.appendChild(li);
     }
