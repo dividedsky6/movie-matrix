@@ -528,9 +528,12 @@ body.modal-open { overflow: hidden; }
 }
 .ask-bar input::placeholder { color: #8F99A8; }
 .ask-go { flex: none; padding: 10px 18px; font-weight: 700; border-color: rgba(var(--ice), .95) !important; }
-.ask-opt { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #C6CFDA; }
-.ask-opt input { accent-color: #a07cff; width: 16px; height: 16px; }
-.ask-opt input:disabled + span { opacity: .55; }
+.ask-session { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 12px; color: #C6CFDA; }
+.ask-session:empty { display: none; }
+.ask-session .fixform { flex: 1 1 100%; }
+.ask-session .fixform[hidden] { display: none; }
+.ask-steps { margin: 0; padding-left: 20px; font-size: 13px; color: #ECE8F7; display: grid; gap: 4px; flex: 1 1 100%; }
+.ask-warn { color: #FFD27A !important; }
 .ask-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
 .ask-note p { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: #ECE8F7; }
 .ask-note:empty { display: none; }
@@ -665,12 +668,12 @@ body { background-attachment: scroll !important; }
         <span class="mystery-note" id="mystery-note">1 film from your whole watchlist, ignoring every filter</span>
       </div>
       <form class="ask" id="ask-form" novalidate>
-        <label class="label" for="ask-input">Ask Claude <em>(opens a new Claude chat with your watchlist)</em></label>
+        <label class="label" for="ask-input">Ask Claude <em>(in your own Claude chat)</em></label>
         <div class="ask-bar">
           <input id="ask-input" type="text" enterkeyhint="go" autocomplete="off" placeholder="e.g. a cozy fall movie with Thanksgiving vibes, under 2 hours">
-          <button type="submit" class="btn ask-go">Ask Claude ↗</button>
+          <button type="submit" class="btn ask-go" id="ask-go">Start a Claude chat ↗</button>
         </div>
-        <label class="ask-opt"><input type="checkbox" id="ask-filtered"> <span id="ask-filtered-text">Only send films matching my current filters</span></label>
+        <div class="ask-session" id="ask-session"></div>
         <div class="ask-note" id="ask-note" aria-live="polite"></div>
       </form>
       <div class="row">
@@ -2049,7 +2052,6 @@ Date,Name,Year,Letterboxd URI
   }
   function updateRegister() {
     updateResetButton();
-    if ($('ask-filtered')) updateAskOpt();
     const n = state.films.length;
     if (!n) { $('register').textContent = 'NO DISC'; return; }
     const p = pool().length;
@@ -2493,68 +2495,95 @@ Date,Name,Year,Letterboxd URI
   $('mystery').onclick = mystery;
 
   /* ---------- Ask Claude ---------- */
-  // Opens a new chat on claude.ai with the request and the watchlist. Claude fills in up to
-  // about 14,000 characters from a link; past that, the full message is copied to paste instead.
-  const ASK_LIMIT = 13000;
-  function filmLine(f, rich) {
+  // One ongoing Claude chat: the first question starts it with your whole watchlist,
+  // later questions go to the same chat. Claude links can't type into an existing chat,
+  // so each message is copied for you to paste.
+  const CHAT_RE = /https?:\/\/claude\.ai\/chat\/[0-9a-f-]{36}/i;
+  let askSession = store.get('askSession', null); // { started: ms, url: '' }
+  function filmLine(f) {
     const m = state.meta[f.uri] || {};
     const bits = [f.name + (f.year ? ` (${f.year})` : '')];
     if (m.runtime) bits.push(m.runtime + 'm'); else if (m.tv) bits.push('TV');
-    if (m.genres && m.genres.length) bits.push(m.genres.slice(0, rich ? 3 : 2).join('/'));
+    if (m.genres && m.genres.length) bits.push(m.genres.slice(0, 3).join('/'));
     if (m.rating != null && (m.votes || 0) >= MIN_VOTES) bits.push('★' + m.rating.toFixed(1));
-    if (rich && m.providers && m.providers.stream && m.providers.stream.length) bits.push('on ' + m.providers.stream.slice(0, 2).map(s => s.name).join(', '));
+    if (m.providers && m.providers.stream && m.providers.stream.length) bits.push('on ' + m.providers.stream.slice(0, 2).map(s => s.name).join(', '));
     return bits.join(' · ');
   }
-  function askPrompt(q, films, rich) {
-    return "I'm choosing a movie from my Letterboxd watchlist. Only suggest films that appear in the list below.\n\n" +
-      `What I'm in the mood for: ${q}\n\n` +
-      'Give me your 5 best matches, best first. For each: title (year), runtime, a line or two on why it fits, and where it is streaming if listed. If fewer than 5 really fit, say so rather than stretching.\n\n' +
-      `My watchlist (${films.length} films; title (year) · runtime · genres · TMDB rating${rich ? ' · streaming in the US' : ''}):\n` +
-      films.map(f => '- ' + filmLine(f, rich)).join('\n');
+  function firstMessage(q) {
+    return "Help me pick movies from my Letterboxd watchlist. I'll ask for different moods in this chat. Only ever suggest films from the list below.\n\n" +
+      'Each time, give me your 5 best matches, best first: title (year), runtime, a line or two on why it fits, and where it is streaming if listed. If fewer than 5 really fit, say so rather than stretching.\n\n' +
+      `First up: ${q}\n\n` +
+      `My watchlist (${state.films.length} films; title (year) · runtime · genres · TMDB rating · streaming in the US):\n` +
+      state.films.map(f => '- ' + filmLine(f)).join('\n');
   }
-  function updateAskOpt() {
-    const k = activeFilters();
-    $('ask-filtered').disabled = !k;
-    if (!k) $('ask-filtered').checked = false;
-    $('ask-filtered-text').textContent = k
-      ? `Only send films matching my current filters (${pool().length} films)`
-      : 'Only send films matching my current filters (no filters on)';
+  const followMessage = q => `Next one, from the same watchlist: ${q}`;
+  function copyText(t) {
+    try { if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t); } catch {}
+    return Promise.reject(new Error('no clipboard'));
+  }
+  function renderAskSession() {
+    const box = $('ask-session'); box.textContent = '';
+    $('ask-go').textContent = askSession ? 'Ask in my chat ↗' : 'Start a Claude chat ↗';
+    if (!askSession) return;
+    const when = new Date(askSession.started).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    box.appendChild(el('span', 'ask-where', askSession.url ? `Going to your Movie Matrix chat from ${when}` : `Going to the Claude chat you started ${when}`));
+    if (askSession.url) {
+      const open = el('a', 'where', 'Open it ↗'); open.href = askSession.url; open.target = '_blank'; open.rel = 'noopener';
+      box.appendChild(open);
+    }
+    const link = el('button', 'fixbtn', askSession.url ? 'Change chat link' : 'Link this chat');
+    link.type = 'button';
+    const form = el('div', 'fixform'); form.hidden = true;
+    const inp = el('input'); inp.type = 'text'; inp.placeholder = 'Paste the chat link (claude.ai/chat/…)'; inp.setAttribute('aria-label', 'Claude chat link');
+    const save = el('button', 'btn', 'Save'); save.type = 'button';
+    form.append(inp, save);
+    link.onclick = () => { form.hidden = !form.hidden; if (!form.hidden) inp.focus(); };
+    save.onclick = () => {
+      const m = inp.value.match(CHAT_RE);
+      if (!m) { inp.value = ''; inp.placeholder = 'That isn\'t a claude.ai/chat/… link'; return; }
+      askSession.url = m[0]; store.set('askSession', askSession); renderAskSession();
+    };
+    const fresh = el('button', 'fixbtn', 'Start a new chat instead'); fresh.type = 'button';
+    fresh.onclick = () => { askSession = null; store.set('askSession', null); renderAskSession(); $('ask-note').textContent = ''; };
+    box.append(link, fresh, form);
   }
   $('ask-form').addEventListener('submit', e => {
     e.preventDefault();
     const q = $('ask-input').value.trim(), note = $('ask-note');
     note.textContent = '';
     if (!q) { note.textContent = "Type what you're in the mood for first."; $('ask-input').focus(); return; }
-    const films = $('ask-filtered').checked ? pool() : state.films;
-    if (!films.length) { note.textContent = 'No films to send. Load your watchlist or loosen your filters.'; return; }
-    const full = askPrompt(q, films, true);
-    let prompt = full;
-    if (prompt.length > ASK_LIMIT) prompt = askPrompt(q, films, false);
-    const fits = prompt.length <= ASK_LIMIT;
-    const toCopy = fits ? prompt : full;
-    const url = 'https://claude.ai/new' + (fits ? '?q=' + encodeURIComponent(prompt) : '');
+    if (!state.films.length) { note.textContent = 'Load your watchlist first.'; return; }
+    const first = !askSession;
+    const text = first ? firstMessage(q) : followMessage(q);
+    const target = first ? 'https://claude.ai/new' : (askSession.url || null);
     // Copy and open inside the same tap, so phones allow both.
-    let copyP = null;
-    try { if (navigator.clipboard && window.isSecureContext) copyP = navigator.clipboard.writeText(toCopy); } catch {}
-    window.open(url, '_blank', 'noopener');
-    const msg = el('p');
-    const link = el('a', 'where', 'Open Claude again ↗'); link.href = url; link.target = '_blank'; link.rel = 'noopener';
-    const again = el('button', 'btn ask-copy', 'Copy message again'); again.type = 'button';
-    again.onclick = () => {
-      try { navigator.clipboard.writeText(toCopy).then(() => { again.textContent = 'Copied ✓'; }, () => { again.textContent = "Couldn't copy"; }); }
-      catch { again.textContent = "Couldn't copy"; }
-    };
-    note.append(msg, link, again);
-    (copyP || Promise.reject(new Error('no clipboard'))).then(() => {
-      msg.textContent = fits
-        ? `Opened a new Claude chat with your request and ${films.length} films filled in. Just press send.`
-        : `${films.length} films is too long to fill in automatically, so the whole message is copied. In the new Claude chat, paste it and send.`;
-    }, () => {
-      msg.textContent = fits
-        ? `Opened a new Claude chat with your request and ${films.length} films filled in. Just press send.`
-        : `${films.length} films is too long to fill in automatically. Tap "Copy message again", then paste it into the new Claude chat and send. Turning on your filters can shrink it enough to fill in by itself.`;
+    const copyP = copyText(text);
+    if (target) window.open(target, '_blank', 'noopener');
+    if (first) { askSession = { started: Date.now(), url: '' }; store.set('askSession', askSession); }
+    const steps = el('ol', 'ask-steps');
+    const li = t => steps.appendChild(el('li', null, t));
+    if (first) {
+      li('A new Claude chat just opened.');
+      li('Tap the message box, paste, and send. Your question and all ' + state.films.length + ' films are copied.');
+      li('Next time, your question goes to this same chat. Tip: tap "Link this chat" below and paste the chat\'s link, so it opens straight to it.');
+    } else if (target) {
+      li('Your Movie Matrix chat just opened.');
+      li('Tap the message box, paste, and send.');
+    } else {
+      li('Your question is copied.');
+      li('Switch back to your Movie Matrix chat in the Claude app, paste, and send.');
+    }
+    const again = el('button', 'btn ask-copy', 'Copy again'); again.type = 'button';
+    again.onclick = () => copyText(text).then(() => { again.textContent = 'Copied ✓'; }, () => { again.textContent = "Couldn't copy"; });
+    note.append(steps, again);
+    copyP.then(null, () => {
+      const warn = el('p', 'ask-warn', "Copying didn't work automatically here. Tap \"Copy again\", then paste.");
+      note.insertBefore(warn, again);
     });
+    $('ask-input').value = '';
+    renderAskSession();
   });
+  renderAskSession();
   $('norepeat').onclick = () => { state.noRepeat = !state.noRepeat; store.set('noRepeat', state.noRepeat); updateSeen(); };
   $('seen-clear').onclick = () => { state.seen.clear(); saveSeen(); setStatus('Starting fresh: every film is back in the draw.'); };
   $('reset-filters').onclick = resetFilters;
