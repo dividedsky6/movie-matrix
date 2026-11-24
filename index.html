@@ -517,6 +517,25 @@ body.modal-open { overflow: hidden; }
 .rating-none { grid-column: 1 / -1; font-size: 10.5px; font-style: italic; color: #9AA6B4; }
 .show-rating { font-size: 10.5px; color: #FFD27A; }
 #ratings .chip[aria-pressed="true"] { background: linear-gradient(180deg, rgba(255, 220, 140, .9), rgba(220, 160, 40, .8)); border-color: #FFE6A8; color: #2A1A00; box-shadow: 0 0 12px rgba(255, 200, 90, .55); }
+/* Ask Claude */
+.ask { display: grid; gap: 8px; padding: 2px 0 14px; border-bottom: 1px dashed rgba(255,255,255,.18); }
+.ask .label { margin-bottom: 0; }
+.ask-bar { display: flex; gap: 8px; }
+.ask-bar input {
+  flex: 1 1 0; width: 0; min-width: 0; padding: 11px 14px; border-radius: 999px; font-size: 14px;
+  background: rgba(0,0,0,.5); color: #F2F6FA; border: 1.5px solid rgba(var(--ice), .6);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.5);
+}
+.ask-bar input::placeholder { color: #8F99A8; }
+.ask-go { flex: none; padding: 10px 18px; font-weight: 700; border-color: rgba(var(--ice), .95) !important; }
+.ask-opt { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #C6CFDA; }
+.ask-opt input { accent-color: #a07cff; width: 16px; height: 16px; }
+.ask-opt input:disabled + span { opacity: .55; }
+.ask-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.ask-note p { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: #ECE8F7; }
+.ask-note:empty { display: none; }
+.ask-copy { padding: 6px 12px; font-size: 12px; }
+@media (max-width: 520px) { .ask-bar { flex-direction: column; } .ask-bar input { width: 100%; flex: none; } }
 /* reset filters */
 .reset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,.18); }
 .reset-filters { padding: 9px 18px; font-weight: 600; }
@@ -645,6 +664,15 @@ body { background-attachment: scroll !important; }
         <button type="button" class="mystery" id="mystery" title="One film from your whole watchlist (shortcut: M)"><span class="q" aria-hidden="true">?</span>Total Mystery</button>
         <span class="mystery-note" id="mystery-note">1 film from your whole watchlist, ignoring every filter</span>
       </div>
+      <form class="ask" id="ask-form" novalidate>
+        <label class="label" for="ask-input">Ask Claude <em>(opens a new Claude chat with your watchlist)</em></label>
+        <div class="ask-bar">
+          <input id="ask-input" type="text" enterkeyhint="go" autocomplete="off" placeholder="e.g. a cozy fall movie with Thanksgiving vibes, under 2 hours">
+          <button type="submit" class="btn ask-go">Ask Claude ↗</button>
+        </div>
+        <label class="ask-opt"><input type="checkbox" id="ask-filtered"> <span id="ask-filtered-text">Only send films matching my current filters</span></label>
+        <div class="ask-note" id="ask-note" aria-live="polite"></div>
+      </form>
       <div class="row">
         <div>
           <span class="label" id="count-label">How many</span>
@@ -2021,6 +2049,7 @@ Date,Name,Year,Letterboxd URI
   }
   function updateRegister() {
     updateResetButton();
+    if ($('ask-filtered')) updateAskOpt();
     const n = state.films.length;
     if (!n) { $('register').textContent = 'NO DISC'; return; }
     const p = pool().length;
@@ -2462,6 +2491,70 @@ Date,Name,Year,Letterboxd URI
   async function pickAndShow() { window.scrollTo(0, 0); await ring(); window.scrollTo(0, 0); }
   $('ring').onclick = pickAndShow;
   $('mystery').onclick = mystery;
+
+  /* ---------- Ask Claude ---------- */
+  // Opens a new chat on claude.ai with the request and the watchlist. Claude fills in up to
+  // about 14,000 characters from a link; past that, the full message is copied to paste instead.
+  const ASK_LIMIT = 13000;
+  function filmLine(f, rich) {
+    const m = state.meta[f.uri] || {};
+    const bits = [f.name + (f.year ? ` (${f.year})` : '')];
+    if (m.runtime) bits.push(m.runtime + 'm'); else if (m.tv) bits.push('TV');
+    if (m.genres && m.genres.length) bits.push(m.genres.slice(0, rich ? 3 : 2).join('/'));
+    if (m.rating != null && (m.votes || 0) >= MIN_VOTES) bits.push('★' + m.rating.toFixed(1));
+    if (rich && m.providers && m.providers.stream && m.providers.stream.length) bits.push('on ' + m.providers.stream.slice(0, 2).map(s => s.name).join(', '));
+    return bits.join(' · ');
+  }
+  function askPrompt(q, films, rich) {
+    return "I'm choosing a movie from my Letterboxd watchlist. Only suggest films that appear in the list below.\n\n" +
+      `What I'm in the mood for: ${q}\n\n` +
+      'Give me your 5 best matches, best first. For each: title (year), runtime, a line or two on why it fits, and where it is streaming if listed. If fewer than 5 really fit, say so rather than stretching.\n\n' +
+      `My watchlist (${films.length} films; title (year) · runtime · genres · TMDB rating${rich ? ' · streaming in the US' : ''}):\n` +
+      films.map(f => '- ' + filmLine(f, rich)).join('\n');
+  }
+  function updateAskOpt() {
+    const k = activeFilters();
+    $('ask-filtered').disabled = !k;
+    if (!k) $('ask-filtered').checked = false;
+    $('ask-filtered-text').textContent = k
+      ? `Only send films matching my current filters (${pool().length} films)`
+      : 'Only send films matching my current filters (no filters on)';
+  }
+  $('ask-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const q = $('ask-input').value.trim(), note = $('ask-note');
+    note.textContent = '';
+    if (!q) { note.textContent = "Type what you're in the mood for first."; $('ask-input').focus(); return; }
+    const films = $('ask-filtered').checked ? pool() : state.films;
+    if (!films.length) { note.textContent = 'No films to send. Load your watchlist or loosen your filters.'; return; }
+    const full = askPrompt(q, films, true);
+    let prompt = full;
+    if (prompt.length > ASK_LIMIT) prompt = askPrompt(q, films, false);
+    const fits = prompt.length <= ASK_LIMIT;
+    const toCopy = fits ? prompt : full;
+    const url = 'https://claude.ai/new' + (fits ? '?q=' + encodeURIComponent(prompt) : '');
+    // Copy and open inside the same tap, so phones allow both.
+    let copyP = null;
+    try { if (navigator.clipboard && window.isSecureContext) copyP = navigator.clipboard.writeText(toCopy); } catch {}
+    window.open(url, '_blank', 'noopener');
+    const msg = el('p');
+    const link = el('a', 'where', 'Open Claude again ↗'); link.href = url; link.target = '_blank'; link.rel = 'noopener';
+    const again = el('button', 'btn ask-copy', 'Copy message again'); again.type = 'button';
+    again.onclick = () => {
+      try { navigator.clipboard.writeText(toCopy).then(() => { again.textContent = 'Copied ✓'; }, () => { again.textContent = "Couldn't copy"; }); }
+      catch { again.textContent = "Couldn't copy"; }
+    };
+    note.append(msg, link, again);
+    (copyP || Promise.reject(new Error('no clipboard'))).then(() => {
+      msg.textContent = fits
+        ? `Opened a new Claude chat with your request and ${films.length} films filled in. Just press send.`
+        : `${films.length} films is too long to fill in automatically, so the whole message is copied. In the new Claude chat, paste it and send.`;
+    }, () => {
+      msg.textContent = fits
+        ? `Opened a new Claude chat with your request and ${films.length} films filled in. Just press send.`
+        : `${films.length} films is too long to fill in automatically. Tap "Copy message again", then paste it into the new Claude chat and send. Turning on your filters can shrink it enough to fill in by itself.`;
+    });
+  });
   $('norepeat').onclick = () => { state.noRepeat = !state.noRepeat; store.set('noRepeat', state.noRepeat); updateSeen(); };
   $('seen-clear').onclick = () => { state.seen.clear(); saveSeen(); setStatus('Starting fresh: every film is back in the draw.'); };
   $('reset-filters').onclick = resetFilters;
