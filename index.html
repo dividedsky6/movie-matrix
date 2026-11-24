@@ -577,6 +577,15 @@ body.modal-open { overflow: hidden; }
 @keyframes twinkle { 0%, 100% { opacity: .3; transform: scale(.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
 .device, footer { position: relative; z-index: 1; }
 
+/* ===== Speed: no animations, no blur, no fixed backgrounds ===== */
+*, *::before, *::after { animation: none !important; transition: none !important; }
+.device, .pick, .share-modal { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+body { background-attachment: scroll !important; }
+.internals { width: 100%; height: 100%; background-repeat: repeat-y; background-position: 0 0; }
+.windows.single { grid-template-columns: minmax(0, 220px) !important; }
+.sparkles i { filter: none; opacity: .75; }
+.slot.out .cart, .slot.out .lcd, .slot.out .info { transform: none; opacity: 1; }
+
 @media (max-width: 720px) {
   .brand p { font-size: 8px; letter-spacing: .06em; padding: 3px 9px 2px; }
   .logo { padding: 14px 18px 12px 6px; }
@@ -1672,7 +1681,7 @@ Date,Name,Year,Letterboxd URI
   const $ = id => document.getElementById(id);
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = true; // animations switched off for speed
 
   /* ---------- CSV / ZIP ---------- */
   function parseCSV(text) {
@@ -2306,6 +2315,7 @@ Date,Name,Year,Letterboxd URI
     const box = $('windows');
     const n = state.picks.length || state.count;
     box.style.setProperty('--cols', Math.min(n, 5));
+    box.classList.toggle('single', n === 1);
     box.textContent = '';
     for (let i = 0; i < n; i++) box.appendChild(buildRoom(i, n, state.picks[i] || null, animate && !reduced));
     if (animate) openShutters();
@@ -2372,7 +2382,12 @@ Date,Name,Year,Letterboxd URI
     cycled = false;
     return "You've now seen every film in this mix, so it has been reshuffled from the top. ";
   }
-  function setStatus(msg, warn) { $('status').textContent = msg; $('status').classList.toggle('warn', !!warn); }
+  let statusTimer;
+  function setStatus(msg, warn) {
+    $('status').textContent = msg; $('status').classList.toggle('warn', !!warn);
+    clearTimeout(statusTimer);
+    if (msg) statusTimer = setTimeout(() => { $('status').textContent = ''; }, warn ? 7000 : 4000);
+  }
 
   async function ring() {
     if (!state.films.length) {
@@ -2411,7 +2426,7 @@ Date,Name,Year,Letterboxd URI
     if (!state.films.length) { ring(); return; }
     const btn = $('mystery');
     btn.disabled = true; $('ring').disabled = true;
-    await closeShutters();
+    window.scrollTo(0, 0);
     state.mysteryMode = true;
     // Pure draw: every one of your films has the same chance, every time. Ignores filters and No repeats.
     const film = state.films[randInt(state.films.length)];
@@ -2426,7 +2441,8 @@ Date,Name,Year,Letterboxd URI
       for (let k = 0; k < 14; k++) { t.textContent = state.films[randInt(state.films.length)].name; await sleep(45 + k * 6); }
     }
     state.picks = [film];
-    renderWindows(true);
+    renderWindows(false);
+    window.scrollTo(0, 0);
     setStatus(`Total mystery: a 1-in-${state.films.length} draw from your whole watchlist.`);
     btn.disabled = false; $('ring').disabled = false;
     freshenStreaming();
@@ -2771,12 +2787,18 @@ Date,Name,Year,Letterboxd URI
   const dev = document.querySelector('.device');
   const c = document.getElementById('internals');
   if (!dev || !c || !c.getContext) return;
+  // Drawn once per screen width as a 1400px-tall tile, then repeated down the case by CSS,
+  // instead of redrawing a full-page canvas every time the page grows.
+  const TILE = 1400; let lastW = 0, lastUrl = null;
+  c.width = 1; c.height = 1;
   function draw() {
-    const w = dev.clientWidth, h = dev.clientHeight;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
-    c.style.width = w + 'px'; c.style.height = h + 'px';
-    const x = c.getContext('2d');
+    const w = dev.clientWidth, h = TILE;
+    if (!w || w === lastW) return;
+    lastW = w;
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+    const off = document.createElement('canvas');
+    off.width = Math.round(w * dpr); off.height = Math.round(h * dpr);
+    const x = off.getContext('2d');
     x.setTransform(dpr, 0, 0, dpr, 0, 0);
     x.clearRect(0, 0, w, h);
     let seed = 20001123;
@@ -2914,11 +2936,17 @@ Date,Name,Year,Letterboxd URI
     x.fillStyle = 'rgba(120, 80, 230, .22)';
     x.fillRect(0, 0, w, h);
     x.globalCompositeOperation = 'source-over';
+    off.toBlob(b => {
+      if (!b) return;
+      const url = URL.createObjectURL(b);
+      c.style.backgroundImage = `url(${url})`;
+      c.style.backgroundSize = `${w}px ${TILE}px`;
+      if (lastUrl) URL.revokeObjectURL(lastUrl);
+      lastUrl = url;
+    });
   }
   let t;
-  const later = () => { clearTimeout(t); t = setTimeout(draw, 80); };
-  if (window.ResizeObserver) new ResizeObserver(later).observe(dev); else window.addEventListener('resize', later);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(draw, 200); });
   draw();
 })();
 </script>
