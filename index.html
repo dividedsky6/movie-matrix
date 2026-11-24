@@ -2458,7 +2458,9 @@ Date,Name,Year,Letterboxd URI
   }
   $('minus').onclick = () => { state.count = Math.max(1, state.count - 1); syncCount(); };
   $('plus').onclick = () => { state.count = Math.min(10, state.count + 1); syncCount(); };
-  $('ring').onclick = ring;
+  // Pressing PICK (button or P key) always jumps to the top so the new picks are in view.
+  async function pickAndShow() { window.scrollTo(0, 0); await ring(); window.scrollTo(0, 0); }
+  $('ring').onclick = pickAndShow;
   $('mystery').onclick = mystery;
   $('norepeat').onclick = () => { state.noRepeat = !state.noRepeat; store.set('noRepeat', state.noRepeat); updateSeen(); };
   $('seen-clear').onclick = () => { state.seen.clear(); saveSeen(); setStatus('Starting fresh: every film is back in the draw.'); };
@@ -2512,7 +2514,7 @@ Date,Name,Year,Letterboxd URI
     if ((e.key === 'm' || e.key === 'M') && !e.metaKey && !e.ctrlKey && !e.altKey &&
         !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '') && $('share-modal').hidden) { e.preventDefault(); mystery(); return; }
     if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey && !e.altKey &&
-        !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); ring(); }
+        !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); pickAndShow(); }
   });
 
   /* ---------- Share card ---------- */
